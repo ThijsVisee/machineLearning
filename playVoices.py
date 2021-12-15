@@ -3,7 +3,7 @@ import math
 import time
 from playsound import playsound
 import sounddevice as sd
-F = np.loadtxt('F.txt', usecols=range(4))
+F = np.loadtxt('data/data.txt', usecols=range(4))
 
 chosenVoice = 0
 voice = F[:, chosenVoice]
