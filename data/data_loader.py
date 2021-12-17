@@ -6,13 +6,12 @@ class VoiceData:
     def __init__(self):
         self.raw_data = []
         self.encoded_data = []
-        self.data_path = 'data.txt'
+        self.data_path = f'{os.getcwd()}/data.txt'
         self.__load_voices()
         self.__encode_pitch()
 
     def __load_voices(self):
-        cwd = os.getcwd()
-        raw_data = np.loadtxt(f'{cwd}/{self.data_path}', dtype=int)
+        raw_data = np.loadtxt(self.data_path, dtype=int)
         samples, voices = raw_data.shape
         self.raw_data = np.array([raw_data[:, i] for i in range(voices)])
         print("Raw Data Loaded Successfully!")
@@ -66,3 +65,5 @@ class VoiceData:
         x = 0
         y = 0
         return x, y
+
+v = VoiceData()
