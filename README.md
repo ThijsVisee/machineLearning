@@ -1,6 +1,18 @@
 # machineLearning
 https://www.overleaf.com/project/61b086574f545f9b96f1f4b7
 
+##### **How To Run?**
+1. Install requirements by running:
+    ```
+    $ pip install -r requirements.txt
+    ```
+2. Run the model:
+   ```
+   $
+   ```
+
+
+
 ### **Finishing Johann Sebastian Bach's Unfinished Masterpiece**
 
 ##### **Data**:
