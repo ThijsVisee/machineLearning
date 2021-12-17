@@ -4,11 +4,17 @@ import numpy as np
 import os as os
 import pandas as pd
 
+
 class VoiceData:
     def __init__(self):
         self.raw_data = []
         self.encoded_data = []
         self.data_path = f'{os.getcwd()}/data.txt'
+        self.__radius = 1
+        self.__chroma = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        self.__c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
+        self.__lowest_note = 35
+        self.__highest_note = 74
         self.__load_voices()
         self.__encode_pitch()
 
@@ -37,8 +43,8 @@ class VoiceData:
                     v = [0, 0, 0, 0, 0]
                 else:
                     log_abs_pitch = self.__get_log_abs_pitch(note)
-                    x_chroma, y_chroma = self.__get_x_y_chroma(note)
-                    x_fifths, y_fifths = self.__get_x_y_fifths(note)
+                    x_chroma, y_chroma = self.__get_x_y(note, 'chroma')
+                    x_fifths, y_fifths = self.__get_x_y(note, 'fifths')
                     v = [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
                 pitch_encoded_voice.append(v)
             self.encoded_data.append(pitch_encoded_voice)
@@ -51,43 +57,26 @@ class VoiceData:
     '''
 
     def __get_log_abs_pitch(self, note):
-        lowest_note = 35
-        highest_note = 74
-
+        # 69 because this is a round integer in Hz
         n = note - 69
         fx = math.pow(2, (n / 12)) * 440
 
-        min_p = 2 * math.log2(math.pow(2, ((lowest_note - 69) / 12)) * 440)
-        max_p = 2 * math.log2(math.pow(2, ((highest_note - 69) / 12)) * 440)
+        min_p = 2 * math.log2(math.pow(2, ((self.__lowest_note - 69) / 12)) * 440)
+        max_p = 2 * math.log2(math.pow(2, ((self.__highest_note - 69) / 12)) * 440)
 
-        log_abs_pitch = 2 * math.log2(fx) - max_p + (max_p - min_p)/2
+        log_abs_pitch = 2 * math.log2(fx) - max_p + (max_p - min_p) / 2
         return log_abs_pitch
 
     '''
-    return x,y coordinates of the position of the note in the chroma circle
+    return x,y coordinates of the position of the note in the chroma circle, or circle of fifths
     '''
 
-    def __get_x_y_chroma(self, note):
-        chroma = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        radius_chroma = 1
+    def __get_x_y(self, note, circle):
         note = ((note - 55) % 12)
-        chroma_angle = (chroma[note] - 1) * (360 / 12)
-        x = radius_chroma * math.sin(math.degrees(chroma_angle))
-        y = radius_chroma * math.sin(math.degrees(chroma_angle))
+        if circle == 'chroma':
+            angle = (self.__chroma[note] - 1) * (360 / 12)
+        elif circle == 'fifths':
+            angle = (self.__chroma[note] - 1) * (360 / 12)
+        x = self.__radius * math.sin(math.degrees(angle))
+        y = self.__radius * math.sin(math.degrees(angle))
         return x, y
-
-    '''
-    return x,y coordinates of the position of the note in the circle of fifths
-    '''
-
-    def __get_x_y_fifths(self, note):
-        c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
-        radius_c5 = 1
-        note = ((note - 55) % 12)
-
-        c5_angle = (c5[note] - 1) * (360 / 12)
-        x = radius_c5 * math.sin(math.degrees(c5_angle))
-        y = radius_c5 * math.sin(math.degrees(c5_angle))
-        return x, y
-
-k = VoiceData()
