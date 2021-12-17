@@ -65,5 +65,3 @@ class VoiceData:
         x = 0
         y = 0
         return x, y
-
-v = VoiceData()
