@@ -1,5 +1,8 @@
+from data.data_loader import VoiceData
+
+
 def main():
-    pass
+    d = VoiceData()
 
 
 if __name__ == '__main__':

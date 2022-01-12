@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 import os as os
 import pandas as pd
@@ -9,7 +8,7 @@ class VoiceData:
     def __init__(self):
         self.raw_data = []
         self.encoded_data = []
-        self.data_path = f'{os.getcwd()}/data.txt'
+        self.data_path = f'{os.path.split(__file__)[0]}{os.sep}data.txt'
         self.__radius = 1
         self.__chroma = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         self.__c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
