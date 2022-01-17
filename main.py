@@ -41,23 +41,28 @@ def main(d, voice, prec):
 
     #print(model.predict(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME])))
     predicted_pitch = model.predict(flatten_list(d.encoded_data[VOICE][len(d.encoded_data[VOICE]) - INCLUDED_PRECEDING_TIME:len(d.encoded_data[VOICE])]))
-    print(d.get_pitch_from_absolute(predicted_pitch[0]))
-    print(predicted_pitch)
+    #print(d.get_pitch_from_absolute(predicted_pitch[0]))
+    #print(predicted_pitch)
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
     d.encoded_data[VOICE].append(predicted_pitch.tolist())
     return predicted_pitch.tolist()
 
 if __name__ == '__main__':
-    VOICE = 1
-    # the number of bars you want to include/16
-    INCLUDED_PRECEDING_TIME = 64 * 16
-    dur = 16
-    d = VoiceData()
-    for i in range(dur):
-        model = main(d, VOICE, INCLUDED_PRECEDING_TIME)
+    for voice in range (4):
+        print('###################')
+        # the number of bars you want to include/16
+        INCLUDED_PRECEDING_TIME = 2 * 16
+        dur = 16
+        d = VoiceData()
+        for i in range(dur):
+            model = main(d, voice, INCLUDED_PRECEDING_TIME)
 
-    with open('./out/output.txt','w') as f:
-        for data in d.encoded_data[VOICE]:
-            val = d.get_pitch_from_absolute(data[0]) if data[0] != 0 else data[0]
-            f.write(str(val) + '\n')
+        fTitle = './out/output'+str(voice+1)+'.txt'
+        with open(fTitle,'w') as f:
+            for data in d.encoded_data[voice]:
+                val = d.get_pitch_from_absolute(data[0]) if data[0] != 0 else data[0]
+                f.write(str(val) + '\n')
+        
+        print('###################')
+        print('')
