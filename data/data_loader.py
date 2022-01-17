@@ -75,7 +75,7 @@ class VoiceData:
         if circle == 'chroma':
             angle = (self.__chroma[note] - 1) * (360 / 12)
         elif circle == 'fifths':
-            angle = (self.__chroma[note] - 1) * (360 / 12)
-        x = self.__radius * math.sin(math.degrees(angle))
+            angle = (self.__c5[note] - 1) * (360 / 12)
+        x = self.__radius * math.cos(math.degrees(angle))
         y = self.__radius * math.sin(math.degrees(angle))
         return x, y

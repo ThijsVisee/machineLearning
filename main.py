@@ -18,7 +18,7 @@ def main():
         if data == duration_data[-1][0:5]:
             duration_data[-1][5] += 1
         else:
-            duration_data.append(data)
+            duration_data.append(data.copy())
             duration_data[-1].append(1)
 
     X = []
@@ -27,7 +27,7 @@ def main():
         if idx <= 32:
             continue
         y.append(data)
-        X.append(flatten_list(d.encoded_data[VOICE][idx - 32:idx]))
+        X.append(np.array(flatten_list(d.encoded_data[VOICE][idx - 32:idx])))
     
     X = np.array(X).T
     y = np.array(y)
@@ -36,7 +36,7 @@ def main():
     print(y.shape)
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
-    print(model.predict(flatten_list(d.encoded_data[VOICE][200:232])))
+    print(model.predict(flatten_list(d.encoded_data[VOICE][0:232])))
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
 
