@@ -9,9 +9,8 @@ def flatten_list(l):
 
 def main():
     VOICE = 3
-    INCLUDED_PRECEDING_TIME = 32
+    INCLUDED_PRECEDING_TIME = 16
     d = VoiceData()
-
     
     duration_data = [d.encoded_data[VOICE][0].copy()]
     duration_data[0].append(1)
