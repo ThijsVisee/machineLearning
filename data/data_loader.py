@@ -66,22 +66,13 @@ class VoiceData:
         log_abs_pitch = 2 * math.log2(fx) - max_p + (max_p - min_p) / 2
         return log_abs_pitch
 
-    # very messy but gets the job done. Will clean this up in a bit :)
+    # reverse of get_log_abs_pitch
     def get_pitch_from_absolute(self, log_abs_pitch):
 
         min_p = 2 * math.log2(math.pow(2, ((self.__lowest_note - 69) / 12)) * 440)
         max_p = 2 * math.log2(math.pow(2, ((self.__highest_note - 69) / 12)) * 440)
 
-        twologfx = log_abs_pitch + max_p - (max_p - min_p)/2
-        logfx = twologfx/2
-
-        x = math.pow(2, logfx)
-        x = x/440
-        x = math.log2(x)
-        x = x * 12
-        note = x + 69
-
-        return note
+        return round(math.log2(math.pow(2, ((log_abs_pitch + max_p - (max_p - min_p)/2)/2))/440) * 12 + 69)
 
     '''
     return x,y coordinates of the position of the note in the chroma circle, or circle of fifths
