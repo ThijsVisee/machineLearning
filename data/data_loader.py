@@ -64,7 +64,7 @@ class VoiceData:
         max_p = 2 * math.log2(math.pow(2, ((self.__highest_note - 69) / 12)) * 440)
 
         log_abs_pitch = 2 * math.log2(fx) - max_p + (max_p - min_p) / 2
-        print(log_abs_pitch)
+        #print(log_abs_pitch)
         return log_abs_pitch
 
     # def __get_pitch_from_absolute(self, abs_pitch):
