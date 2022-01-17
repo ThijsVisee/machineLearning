@@ -64,7 +64,14 @@ class VoiceData:
         max_p = 2 * math.log2(math.pow(2, ((self.__highest_note - 69) / 12)) * 440)
 
         log_abs_pitch = 2 * math.log2(fx) - max_p + (max_p - min_p) / 2
+        print(log_abs_pitch)
         return log_abs_pitch
+
+    # def __get_pitch_from_absolute(self, abs_pitch):
+    #
+    #     min_p = 2 * math.log2(math.pow(2, ((self.__lowest_note - 69) / 12)) * 440)
+    #     max_p = 2 * math.log2(math.pow(2, ((self.__highest_note - 69) / 12)) * 440)
+
 
     '''
     return x,y coordinates of the position of the note in the chroma circle, or circle of fifths
@@ -75,7 +82,7 @@ class VoiceData:
         if circle == 'chroma':
             angle = (self.__chroma[note] - 1) * (360 / 12)
         elif circle == 'fifths':
-            angle = (self.__chroma[note] - 1) * (360 / 12)
-        x = self.__radius * math.sin(math.degrees(angle))
+            angle = (self.__c5[note] - 1) * (360 / 12)
+        x = self.__radius * math.cos(math.degrees(angle))
         y = self.__radius * math.sin(math.degrees(angle))
         return x, y
