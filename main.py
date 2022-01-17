@@ -18,7 +18,7 @@ def main():
         if data == duration_data[-1][0:5]:
             duration_data[-1][5] += 1
         else:
-            duration_data.append(data)
+            duration_data.append(data.copy())
             duration_data[-1].append(1)
 
     X = []
