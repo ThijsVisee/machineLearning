@@ -39,12 +39,13 @@ def main(d, voice, prec):
 
     # print(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME]))
 
-    pred = model.predict(flatten_list(d.encoded_data[VOICE][len(d.encoded_data[VOICE]) - INCLUDED_PRECEDING_TIME:len(d.encoded_data[VOICE])]))
-    print(pred)
-
-    return d.encoded_data[VOICE].append(pred.tolist())
+    #print(model.predict(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME])))
+    predicted_pitch = model.predict(flatten_list(d.encoded_data[VOICE][len(d.encoded_data[VOICE]) - INCLUDED_PRECEDING_TIME:len(d.encoded_data[VOICE])]))
+    print(d.get_pitch_from_absolute(predicted_pitch[0]))
+    print(predicted_pitch)
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
+    return d.encoded_data[VOICE].append(predicted_pitch.tolist())
 
 if __name__ == '__main__':
     VOICE = 1
