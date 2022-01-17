@@ -9,6 +9,7 @@ def flatten_list(l):
 
 def main():
     VOICE = 3
+    INCLUDED_PRECEDING_TIME = 32
     d = VoiceData()
 
     
@@ -24,10 +25,10 @@ def main():
     X = []
     y = []
     for idx, data in enumerate(d.encoded_data[VOICE]):
-        if idx <= 32:
+        if idx <= INCLUDED_PRECEDING_TIME:
             continue
         y.append(data)
-        X.append(flatten_list(d.encoded_data[VOICE][idx - 32:idx]))
+        X.append(flatten_list(d.encoded_data[VOICE][idx - INCLUDED_PRECEDING_TIME:idx]))
     
     X = np.array(X).T
     y = np.array(y)
@@ -36,9 +37,9 @@ def main():
     print(y.shape)
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
-    # print(flatten_list(d.encoded_data[VOICE][0:32]))
+    # print(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME]))
 
-    print(model.predict(flatten_list(d.encoded_data[VOICE][0:32])))
+    print(model.predict(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME])))
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
 
