@@ -12,7 +12,7 @@ def main():
     d = VoiceData()
 
     
-    duration_data = [d.encoded_data[VOICE][0]]
+    duration_data = [d.encoded_data[VOICE][0].copy()]
     duration_data[0].append(1)
     for data in d.encoded_data[VOICE][1:]:
         if data == duration_data[-1][0:5]:
@@ -36,7 +36,9 @@ def main():
     print(y.shape)
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
-    print(model.predict(flatten_list(d.encoded_data[VOICE][200:232])))
+    # print(flatten_list(d.encoded_data[VOICE][0:32]))
+
+    print(model.predict(flatten_list(d.encoded_data[VOICE][0:32])))
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
 
