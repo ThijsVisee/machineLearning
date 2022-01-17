@@ -39,6 +39,8 @@ def main():
     # print(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME]))
 
     print(model.predict(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME])))
+    predicted_pitch = model.predict(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME]))[0]
+    print(d.get_pitch_from_absolute(predicted_pitch))
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
 

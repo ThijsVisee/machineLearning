@@ -9,8 +9,8 @@ class LinearRegression:
         """
         self.ridge_alpha = ridge_alpha
         self.weights = self.__fit(X.T, y)
-        #for weight in self.weights:
-            #print(self.weights)
+        for weight in self.weights:
+            print(self.weights)
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         """
