@@ -1,5 +1,7 @@
-venv
 ### Custom Ignores ###
+venv
+out/*
+!out/.gitkeep
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,virtualenv,visualstudiocode,pycharm
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,virtualenv,visualstudiocode,pycharm
@@ -57,7 +59,7 @@ cmake-build-*/
 *.iws
 
 # IntelliJ
-out/
+#out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
