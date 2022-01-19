@@ -32,22 +32,27 @@ def main(d, voice, preceding_notes):
 
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
-    for idx, data in enumerate(duration_data):
-        if idx <= preceding_notes:
-            continue
-        predicted_pitch = model.predict(flatten_list(d.encoded_data[voice][idx - preceding_notes:idx]))
-        print(idx)
-        print(d.get_pitch_from_absolute(predicted_pitch[0]))
-        print([duration_data[idx][0]] + [duration_data[idx][5]])
-        print(predicted_pitch)
-        print()
+    idx == len(duration_data) - 1
+    print(duration_data[-1])
+    while idx < 1300:
+        predicted_pitch, duration = model.predict(flatten_list(d.encoded_data[voice][-preceding_notes-1:-1]))
+        predicted_pitch = d.get_pitch_from_absolute(predicted_pitch)
+        print(f"{idx}: {predicted_pitch}, {duration}")
+        if duration > 12:
+            break
+        for _ in range(round(duration)) if duration >= 0.5 else range(1):
+            d.encoded_data[voice].append(VoiceData.encode_single_pitch(predicted_pitch))
+            idx += 1
+            print(d.encoded_data[voice][-1])
+            print(d.encoded_data[voice][-2])
+
 
     return d.encoded_data[voice].append(predicted_pitch.tolist())
 
 
 if __name__ == '__main__':
     VOICE = 1
-    INCLUDED_PRECEDING_STEPS = 128
+    INCLUDED_PRECEDING_STEPS = 16
     d = VoiceData()
     # for i in range(dur):
     model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)

@@ -5,13 +5,14 @@ import pandas as pd
 
 
 class VoiceData:
+    __radius = 1
+    __chroma = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    __c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
+    
     def __init__(self):
         self.raw_data = []
         self.encoded_data = []
         self.data_path = f'{os.path.split(__file__)[0]}{os.sep}data.txt'
-        self.__radius = 1
-        self.__chroma = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        self.__c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
         self.__lowest_note = 35
         self.__highest_note = 74
         self.__load_voices()
@@ -42,14 +43,26 @@ class VoiceData:
                     v = [0, 0, 0, 0, 0]
                 else:
                     log_abs_pitch = self.__get_log_abs_pitch(note)
-                    x_chroma, y_chroma = self.__get_x_y(note, 'chroma')
-                    x_fifths, y_fifths = self.__get_x_y(note, 'fifths')
+                    x_chroma, y_chroma = VoiceData.__get_x_y(note, 'chroma')
+                    x_fifths, y_fifths = VoiceData.__get_x_y(note, 'fifths')
                     v = [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
                 pitch_encoded_voice.append(v)
             self.encoded_data.append(pitch_encoded_voice)
             print(f"Voice {idx} encoded")
         print("Pitch Encoded Successfully!")
         # pd.DataFrame(self.encoded_data).to_csv("file.csv")
+
+    
+    @staticmethod
+    def encode_single_pitch(pitch):
+        if pitch == 0:
+            v = [0, 0, 0, 0, 0]
+        else:
+            log_abs_pitch = 2 * math.log2(math.pow(2, (pitch / 12)) * 440)
+            x_chroma, y_chroma = VoiceData.__get_x_y(pitch, 'chroma')
+            x_fifths, y_fifths = VoiceData.__get_x_y(pitch, 'fifths')
+            v = [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
+        return v
 
     '''
     return logarithm of the absolute pitch
@@ -78,12 +91,13 @@ class VoiceData:
     return x,y coordinates of the position of the note in the chroma circle, or circle of fifths
     '''
 
-    def __get_x_y(self, note, circle):
+    @staticmethod
+    def __get_x_y(note, circle):
         note = ((note - 55) % 12)
         if circle == 'chroma':
-            angle = (self.__chroma[note] - 1) * (360 / 12)
+            angle = (VoiceData.__chroma[note] - 1) * (360 / 12)
         elif circle == 'fifths':
-            angle = (self.__c5[note] - 1) * (360 / 12)
-        x = self.__radius * math.cos(math.degrees(angle))
-        y = self.__radius * math.sin(math.degrees(angle))
+            angle = (VoiceData.__c5[note] - 1) * (360 / 12)
+        x = VoiceData.__radius * math.cos(math.degrees(angle))
+        y = VoiceData.__radius * math.sin(math.degrees(angle))
         return x, y
