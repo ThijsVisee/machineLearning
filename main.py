@@ -51,12 +51,15 @@ def main(d, voice, prec):
 if __name__ == '__main__':
     for voice in range (4):
         print('###################')
-        # the number of bars you want to include/16
+        # the number of bars you want to include for prediction * 16
         INCLUDED_PRECEDING_TIME = 2 * 16
-        dur = 16
+        # the number of bars you want to predict * 16
+        dur = 1 * 16
         d = VoiceData()
         for i in range(dur):
             model = main(d, voice, INCLUDED_PRECEDING_TIME)
+            if (i+1)%16 == 0:
+                print(f'predicted {int((i+1)/16)} bars')
 
         fTitle = './out/output'+str(voice+1)+'.txt'
         with open(fTitle,'w') as f:
