@@ -1,7 +1,9 @@
+from faulthandler import dump_traceback
 import numpy as np
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
+
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
@@ -14,13 +16,10 @@ def main(d, voice, preceding_notes):
     for idx, data in enumerate(d.encoded_data[voice][1:]):
         if data == duration_data[-1][0:5]:
             duration_data[-1][5] += 1
-            if duration_data[-1][0] != 0:
-                max_duration = max(max_duration, duration_data[-1][5])
         else:
             duration_data.append(data.copy())
             duration_data[-1].append(1)
     
-
     X = []
     y = []
     for idx, data in enumerate(duration_data):
@@ -34,20 +33,18 @@ def main(d, voice, preceding_notes):
 
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
-    idx == len(duration_data) - 1
+    idx = 0
     print(duration_data[-1])
-    while idx < 1300:
-        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes-1:-1]))
-        predicted_pitch = d.get_pitch_from_absolute(predicted_pitch)
-        print(f"{idx}: {predicted_pitch}, {duration}")
-        if duration > 12:
-            break
-        for _ in range(round(duration)) if duration >= 0.5 else range(1):
-            d.encoded_data[voice].append(VoiceData.encode_single_pitch(predicted_pitch))
-            idx += 1
-            print(d.encoded_data[voice][-1])
-            print(d.encoded_data[voice][-2])
-
+    while idx < 230:
+        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
+        duration = round(duration)
+        if duration < 1:
+            duration = 1
+        elif duration > 16:
+            duration = 16
+        duration_data.append(VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [round(duration)])
+        print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
+        idx += duration
 
 
 if __name__ == '__main__':
@@ -56,3 +53,4 @@ if __name__ == '__main__':
     d = VoiceData()
     # for i in range(dur):
     model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
+
