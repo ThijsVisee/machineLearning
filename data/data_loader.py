@@ -62,7 +62,7 @@ class VoiceData:
         if pitch == 0:
             v = [0, 0, 0, 0, 0]
         else:
-            log_abs_pitch = 2 * math.log2(math.pow(2, (pitch / 12)) * 440)
+            log_abs_pitch = VoiceData.__get_abs_pitch(pitch)
             x_chroma, y_chroma = VoiceData.__get_x_y(pitch, 'chroma')
             x_fifths, y_fifths = VoiceData.__get_x_y(pitch, 'fifths')
             v = [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
@@ -78,6 +78,17 @@ class VoiceData:
     '''
     return logarithm of the absolute pitch
     '''
+    @staticmethod
+    def __get_abs_pitch(note):
+        # 69 because this is a round integer in Hz
+        n = note - 69
+        fx = math.pow(2, (n / 12)) * 440
+
+        min_p = 2 * math.log2(math.pow(2, ((VoiceData.__lowest_note - 69) / 12)) * 440)
+        max_p = 2 * math.log2(math.pow(2, ((VoiceData.__highest_note - 69) / 12)) * 440)
+
+        log_abs_pitch = 2 * math.log2(fx) - max_p + (max_p - min_p) / 2
+        return log_abs_pitch
 
     def __get_log_abs_pitch(self, note):
         # 69 because this is a round integer in Hz
