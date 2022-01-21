@@ -45,19 +45,25 @@ def main(d, voice, prec):
     #print(predicted_pitch)
     # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
 
-    d.encoded_data[VOICE].append(predicted_pitch.tolist())
-    return predicted_pitch.tolist()
+    # does not work yet since distances to other voices are only known when all 4 voices have been predicted for a given index
+    #newNote = d.encode_pitch(predicted_pitch.toList()[0])
+    newNote = predicted_pitch.tolist()
+
+    d.encoded_data[VOICE].append(newNote)
+    return
 
 if __name__ == '__main__':
-    for voice in range (4):
+    d = VoiceData()
+    for voice in range (d.numVoices):
         print('###################')
         # the number of bars you want to include for prediction * 16
         INCLUDED_PRECEDING_TIME = 2 * 16
         # the number of bars you want to predict * 16
         dur = 1 * 16
-        d = VoiceData()
         for i in range(dur):
-            model = main(d, voice, INCLUDED_PRECEDING_TIME)
+
+            main(d, voice, INCLUDED_PRECEDING_TIME)
+
             if (i+1)%16 == 0:
                 print(f'predicted {int((i+1)/16)} bars')
 
