@@ -40,9 +40,15 @@ def main(d, voice, preceding_notes):
     print(duration_data[-3], VoiceData.get_pitch_from_absolute(duration_data[-3][0]))
     print(duration_data[-2], VoiceData.get_pitch_from_absolute(duration_data[-2][0]))
     print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
+
+    for n in duration_data:
+        print(n)
+
     while idx < 230:
         predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
-        duration = round(duration)
+
+        duration = round(duration) if (((round(duration) % 2) == 0)) else round(duration) + 1
+        #duration = round(duration)
         if duration < 1:
             duration = 1
         elif duration > 16:
@@ -57,7 +63,7 @@ def main(d, voice, preceding_notes):
 
 if __name__ == '__main__':
     VOICE = 1
-    INCLUDED_PRECEDING_STEPS = 16
+    INCLUDED_PRECEDING_STEPS = 32
     d = VoiceData()
     # for i in range(dur):
     model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
