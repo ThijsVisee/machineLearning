@@ -1,68 +1,62 @@
+from faulthandler import dump_traceback
 import numpy as np
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 
+
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
-def fit_model():
-    return
 
-def main(d, voice, prec):
-    VOICE = voice
-    INCLUDED_PRECEDING_TIME = prec
-
-    duration_data = [d.encoded_data[VOICE][0].copy()]
+def main(d, voice, preceding_notes):
+    duration_data = [d.encoded_data[voice][0].copy()]
     duration_data[0].append(1)
-    for idx, data in enumerate(d.encoded_data[VOICE][1:]):
+    max_duration = 0
+    for idx, data in enumerate(d.encoded_data[voice][1:]):
         if data == duration_data[-1][0:5]:
             duration_data[-1][5] += 1
+            if duration_data[-1][0] != 0:
+                max_duration = max(max_duration, duration_data[-1][5])
         else:
             duration_data.append(data.copy())
             duration_data[-1].append(1)
 
     X = []
     y = []
-    for idx, data in enumerate(d.encoded_data[VOICE]):
-        if idx <= INCLUDED_PRECEDING_TIME:
+    for idx, data in enumerate(duration_data):
+        if idx <= preceding_notes:
             continue
-        y.append(data)
-        X.append(flatten_list(d.encoded_data[VOICE][idx - INCLUDED_PRECEDING_TIME:idx]))
+        y.append(np.array([data[0], data[5]]))
+        X.append(flatten_list(duration_data[idx - preceding_notes:idx]))
     
     X = np.array(X).T
     y = np.array(y)
 
-    #print(X.shape)
-    #print(y.shape)
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
-    # print(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME]))
+    idx = 0
 
-    #print(model.predict(flatten_list(d.encoded_data[VOICE][0:INCLUDED_PRECEDING_TIME])))
-    predicted_pitch = model.predict(flatten_list(d.encoded_data[VOICE][len(d.encoded_data[VOICE]) - INCLUDED_PRECEDING_TIME:len(d.encoded_data[VOICE])]))
-    #print(d.get_pitch_from_absolute(predicted_pitch[0]))
-    #print(predicted_pitch)
-    # pred = np.array([model.predict(X.T[idx]) for idx in range(10)])
+    while idx < 230:
+        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
 
-    d.encoded_data[VOICE].append(predicted_pitch.tolist())
-    return predicted_pitch.tolist()
+        duration = round(duration) if (((round(duration) % 2) == 0)) else round(duration) + 1
+        #duration = round(duration)
+        if duration < 1:
+            duration = 1
+        elif duration > 16:
+            duration = 16
+        # print("prediction", predicted_pitch, VoiceData.get_pitch_from_absolute(predicted_pitch))
+        duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [duration])
+        # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
+        #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
+        print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
+        idx += duration
+
 
 if __name__ == '__main__':
-    for voice in range (4):
-        print('###################')
-        # the number of bars you want to include/16
-        INCLUDED_PRECEDING_TIME = 2 * 16
-        dur = 16
-        d = VoiceData()
-        for i in range(dur):
-            model = main(d, voice, INCLUDED_PRECEDING_TIME)
-
-        fTitle = './out/output'+str(voice+1)+'.txt'
-        with open(fTitle,'w') as f:
-            for data in d.encoded_data[voice]:
-                val = d.get_pitch_from_absolute(data[0]) if data[0] != 0 else data[0]
-                f.write(str(val) + '\n')
-        
-        print('###################')
-        print('')
+    VOICE = 1
+    INCLUDED_PRECEDING_STEPS = 32
+    d = VoiceData()
+    # for i in range(dur):
+    model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
