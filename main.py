@@ -36,13 +36,6 @@ def main(d, voice, preceding_notes):
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
     idx = 0
-    print(duration_data[-4], VoiceData.get_pitch_from_absolute(duration_data[-4][0]))
-    print(duration_data[-3], VoiceData.get_pitch_from_absolute(duration_data[-3][0]))
-    print(duration_data[-2], VoiceData.get_pitch_from_absolute(duration_data[-2][0]))
-    print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
-
-    for n in duration_data:
-        print(n)
 
     while idx < 230:
         predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
