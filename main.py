@@ -37,17 +37,19 @@ def main(d, voice, preceding_notes):
     note_model = LinearRegression(X, y_note, ridge_alpha=0.005)
     duration_model = LinearRegression(X, y_duration, ridge_alpha=0.005)
 
-    with open("out/prediction.txt", "a") as f:
+    with open("out/prediction.txt", "w") as f:
         # TODO: Check this for loop, I don't understand it
-        for n in duration_data:
-            pitch = VoiceData.get_pitch_from_absolute(n[0])
-            # print(pitch, n[5])
+        for x in raw_data:
+            f.write(f"{x}\n")
+        # for n in duration_data:
+        #     pitch = VoiceData.get_pitch_from_absolute(n[0])
+        #     # print(pitch, n[5])
 
-            fileindex = 0
-            while fileindex < n[5]:
-                # f.write(str(pitch))
-                # f.write("\n")
-                fileindex = fileindex + 1
+        #     fileindex = 0
+        #     while fileindex < n[preceding_notes]:
+        #         f.write(str(pitch))
+        #         f.write("\n")
+        #         fileindex = fileindex + 1
 
         idx = 0
         previous_pitch = -1
@@ -73,10 +75,8 @@ def main(d, voice, preceding_notes):
             # Append the encoded predicted pitch and duration to the data to use it as input for the next prediction
             duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [predicted_duration])
 
-            # Write the predicted pitch to the output file
-            pred_pitch = VoiceData.get_pitch_from_absolute(predicted_pitch)
             for _ in range(predicted_duration):
-                f.write(str(pred_pitch))
+                f.write(str(predicted_pitch))
                 f.write("\n")
 
             idx += predicted_duration
