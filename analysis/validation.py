@@ -18,7 +18,7 @@ def msle(hyp, val):
 
 if __name__ == '__main__':
     from data.data_loader import VoiceData
-    from main import main
+    from main import get_prediction
     VOICE = 0
     # values below are multiplied by 16 to get the actual number of notes from bars
     INCLUDED_PRECEDING_STEPS = 12 * 16
@@ -26,4 +26,7 @@ if __name__ == '__main__':
 
     d = VoiceData()
 
-    model = main(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION, False)
+    model,predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION, False)
+
+    for d in range(predCount):
+        print(msle())
