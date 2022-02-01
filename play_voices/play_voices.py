@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import time
-from playsound import playsound
 import os
 import sounddevice as sd
 
@@ -52,7 +51,3 @@ for n in voice:
 sd.play(soundvector1, 10000)
 time.sleep(50)
 sd.stop()
-
-
-
-

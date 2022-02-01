@@ -1,21 +1,22 @@
-from faulthandler import dump_traceback
 import numpy as np
+import os
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
+from analysis.validation import *
 
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 def write_to_file(data, voice):
-    fTitle = './out/output'+str(voice+1)+'.txt'
+    fTitle = f'{os.getcwd()}/out/output{str(voice+1)}.txt'
 
     with open(fTitle,'w') as f:
         for note in data:
-            val = VoiceData.get_pitch_from_absolute(note[0]) if note[0] != 0 else note[0]
+            val = VoiceData.get_pitch_from_absolute(note[0]) if note[0] != 0 else int(note[0])
             dur = note[5]
-            for d in range(dur):
+            for d in range(int(dur)):
                 f.write(str(val) + '\n')
 
 
@@ -76,6 +77,7 @@ def get_prediction(d, voice, preceding_notes, pred):
 if __name__ == '__main__':
 
     VOICE = 1
+
     # values below are multiplied by 16 to get the actual number of notes from bars
     INCLUDED_PRECEDING_STEPS = 12 * 16
     PREDICTION = 24 * 16
@@ -86,7 +88,13 @@ if __name__ == '__main__':
 
     prediction, predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION)
 
+    prediction = np.array(prediction)
+
     if(write_all_data):
         write_to_file(prediction, VOICE)
     else:
         write_to_file(prediction[-predCount:], VOICE)
+
+    #visualize_results(f"output{str(VOICE+1)}")
+
+    #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))

@@ -1,5 +1,7 @@
 import math
+import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 '''
 calculate the loss
@@ -8,25 +10,22 @@ def calculate_loss():
     return
 
 '''
-return the mean squared logarithmic error (MSLE)
+return the mean squared logarithmic error (MSLE).
+Both input lists need to have the same size
 '''
 def msle(hyp, val):
-    err = map(lambda x, y: math.pow(math.log10(x+1) - math.log10(y+1)), hyp, val)
+    if len(hyp) != len(val):
+        raise RuntimeError(f"length {len(hyp)} != {len(val)}")
+    # we add +1 to both values here to avoid stupid errors in case one of the values is zero
+    err = map(lambda x, y: math.pow(math.log10(x+1) - math.log10(y+1),2), hyp, val)
 
-    return np.mean(err)
+    return np.mean(list(err))
 
-
-if __name__ == '__main__':
-    from data.data_loader import VoiceData
-    from main import get_prediction
-    VOICE = 0
-    # values below are multiplied by 16 to get the actual number of notes from bars
-    INCLUDED_PRECEDING_STEPS = 12 * 16
-    PREDICTION = 24 * 16
-
-    d = VoiceData('simpleOctave.txt')
-
-    model,predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION, False)
-
-    for d in range(predCount):
-        print(msle())
+'''
+print a simple plot of the notes
+'''
+def visualize_results(filepath):
+    fTitle = f'{os.getcwd()}/out/{filepath}.txt'
+    file = np.loadtxt(fTitle, dtype=int)
+    plt.plot(file)
+    plt.show()
