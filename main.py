@@ -51,7 +51,7 @@ def get_prediction(d, voice, preceding_notes, pred):
     count = 0
 
     while idx < pred:
-        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes-1: -1]))
+        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes:]))
 
         duration = round(duration) if (((round(duration) % 2) == 0)) else round(duration) + 1
 
@@ -75,14 +75,14 @@ def get_prediction(d, voice, preceding_notes, pred):
 
 if __name__ == '__main__':
 
-    VOICE = 0
+    VOICE = 1
     # values below are multiplied by 16 to get the actual number of notes from bars
     INCLUDED_PRECEDING_STEPS = 12 * 16
     PREDICTION = 24 * 16
 
-    write_all_data = False
+    write_all_data = True
 
-    d = VoiceData()
+    d = VoiceData('simpleOctave.txt')
 
     prediction, predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION)
 
