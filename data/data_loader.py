@@ -9,13 +9,13 @@ class VoiceData:
     __radius = 1
     __chroma = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     __c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
-    __lowest_note = 35
-    __highest_note = 74
+    __lowest_note = 1
+    __highest_note = 88
     
     def __init__(self):
         self.raw_data = []
         self.encoded_data = []
-        self.data_path = f'{os.path.split(__file__)[0]}{os.sep}data.txt'
+        self.data_path = f'{os.path.split(__file__)[0]}{os.sep}simpleOctave.txt'
         self.__lowest_note = 35
         self.__highest_note = 74
         self.__load_voices()
