@@ -24,7 +24,7 @@ if __name__ == '__main__':
     INCLUDED_PRECEDING_STEPS = 12 * 16
     PREDICTION = 24 * 16
 
-    d = VoiceData()
+    d = VoiceData('simpleOctave.txt')
 
     model,predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION, False)
 

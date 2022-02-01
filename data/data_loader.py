@@ -12,10 +12,10 @@ class VoiceData:
     __lowest_note = 1
     __highest_note = 88
     
-    def __init__(self):
+    def __init__(self, filepath):
         self.raw_data = []
         self.encoded_data = []
-        self.data_path = f'{os.path.split(__file__)[0]}{os.sep}simpleOctave.txt'
+        self.data_path = f'{os.path.split(__file__)[0]}{os.sep}{filepath}'
         self.__lowest_note = 35
         self.__highest_note = 74
         self.__load_voices()
