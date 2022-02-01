@@ -47,8 +47,6 @@ def main(d, voice, preceding_notes):
             # f.write("\n")
             fileindex = fileindex + 1
 
-
-
     while idx < 500:
         predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
 
