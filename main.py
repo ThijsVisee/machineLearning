@@ -37,10 +37,22 @@ def main(d, voice, preceding_notes):
 
     idx = 0
 
-    while idx < 230:
+    f = open("out/prediction.txt", "w")
+    for n in duration_data:
+        pitch = VoiceData.get_pitch_from_absolute(n[0])
+        print(VoiceData.get_pitch_from_absolute(n[0]), n[5])
+        fileindex = 0
+        while fileindex < n[5]:
+            # f.write(str(pitch))
+            # f.write("\n")
+            fileindex = fileindex + 1
+
+    while idx < 500:
         predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
 
         duration = round(duration) if (((round(duration) % 2) == 0)) else round(duration) + 1
+
+
         #duration = round(duration)
         if duration < 1:
             duration = 1
@@ -53,10 +65,18 @@ def main(d, voice, preceding_notes):
         print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
         idx += duration
 
+        pred_pitch = VoiceData.get_pitch_from_absolute(predicted_pitch)
+        ind = 0
+        while ind < duration:
+            f.write(str(pred_pitch))
+            f.write("\n")
+            ind = ind + 1
+
+    f.close()
 
 if __name__ == '__main__':
     VOICE = 1
-    INCLUDED_PRECEDING_STEPS = 32
+    INCLUDED_PRECEDING_STEPS = 200
     d = VoiceData()
     # for i in range(dur):
     model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
