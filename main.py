@@ -8,8 +8,18 @@ from model.linear_regression import LinearRegression
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
+def write_to_file(data, voice):
+    fTitle = './out/output'+str(voice+1)+'.txt'
 
-def main(d, voice, preceding_notes):
+    with open(fTitle,'w') as f:
+        for note in data:
+            val = VoiceData.get_pitch_from_absolute(note[0]) if note[0] != 0 else note[0]
+            dur = note[5]
+            for d in range(dur):
+                f.write(str(val) + '\n')
+
+
+def main(d, voice, preceding_notes, pred, write_all_data = False):
     duration_data = [d.encoded_data[voice][0].copy()]
     duration_data[0].append(1)
     max_duration = 0
@@ -37,18 +47,11 @@ def main(d, voice, preceding_notes):
 
     idx = 0
 
-    f = open("out/prediction.txt", "w")
-    for n in duration_data:
-        pitch = VoiceData.get_pitch_from_absolute(n[0])
-        print(VoiceData.get_pitch_from_absolute(n[0]), n[5])
-        fileindex = 0
-        while fileindex < n[5]:
-            # f.write(str(pitch))
-            # f.write("\n")
-            fileindex = fileindex + 1
+    # count index of predictions we make
+    count = 0
 
-    while idx < 500:
-        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
+    while idx < pred:
+        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes-1: -1]))
 
         duration = round(duration) if (((round(duration) % 2) == 0)) else round(duration) + 1
 
@@ -62,21 +65,23 @@ def main(d, voice, preceding_notes):
         duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [duration])
         # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
         #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
-        print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
+        #print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
         idx += duration
+        count += 1
 
-        pred_pitch = VoiceData.get_pitch_from_absolute(predicted_pitch)
-        ind = 0
-        while ind < duration:
-            f.write(str(pred_pitch))
-            f.write("\n")
-            ind = ind + 1
+    if(write_all_data):
+        write_to_file(duration_data, voice)
+    else:
+        write_to_file(duration_data[-count:], voice)
 
-    f.close()
+
 
 if __name__ == '__main__':
-    VOICE = 1
-    INCLUDED_PRECEDING_STEPS = 200
+    VOICE = 0
+    # values below are multiplied by 16 to get the actual number of notes from bars
+    INCLUDED_PRECEDING_STEPS = 12 * 16
+    PREDICTION = 24 * 16
+
     d = VoiceData()
-    # for i in range(dur):
-    model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
+
+    model = main(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION, False)
