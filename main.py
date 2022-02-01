@@ -1,5 +1,6 @@
 from faulthandler import dump_traceback
 import numpy as np
+import pandas as pd
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
@@ -29,17 +30,13 @@ def main(d, voice, preceding_notes):
             continue
         y.append(np.array([data[0], data[5]]))
         X.append(flatten_list(duration_data[idx - preceding_notes:idx]))
-    
+
     X = np.array(X).T
     y = np.array(y)
 
     model = LinearRegression(X, y, ridge_alpha=0.005)
 
     idx = 0
-    print(duration_data[-4], VoiceData.get_pitch_from_absolute(duration_data[-4][0]))
-    print(duration_data[-3], VoiceData.get_pitch_from_absolute(duration_data[-3][0]))
-    print(duration_data[-2], VoiceData.get_pitch_from_absolute(duration_data[-2][0]))
-    print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
     while idx < 230:
         predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes - 1: -1]))
         duration = round(duration)
@@ -47,18 +44,14 @@ def main(d, voice, preceding_notes):
             duration = 1
         elif duration > 16:
             duration = 16
-        # print("prediction", predicted_pitch, VoiceData.get_pitch_from_absolute(predicted_pitch))
         duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [duration])
-        # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
-        #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
         print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
         idx += duration
 
 
 if __name__ == '__main__':
     VOICE = 1
-    INCLUDED_PRECEDING_STEPS = 16
+    INCLUDED_PRECEDING_STEPS = 50
     d = VoiceData()
     # for i in range(dur):
     model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
-

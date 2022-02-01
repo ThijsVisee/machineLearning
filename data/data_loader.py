@@ -1,3 +1,4 @@
+import sys
 from base64 import encode
 import math
 import numpy as np
@@ -11,10 +12,11 @@ class VoiceData:
     __c5 = [1, 8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6]
     __lowest_note = 35
     __highest_note = 74
-    
+
     def __init__(self):
         self.raw_data = []
         self.encoded_data = []
+        self.duration_data = []
         self.data_path = f'{os.path.split(__file__)[0]}{os.sep}data.txt'
         self.__lowest_note = 35
         self.__highest_note = 74
@@ -54,9 +56,67 @@ class VoiceData:
             self.encoded_data.append(pitch_encoded_voice)
             print(f"Voice {idx} encoded")
         print("Pitch Encoded Successfully!")
-        # pd.DataFrame(self.encoded_data).to_csv("file.csv")
 
-    
+    def __encode_single_sample(self, sample):
+        log_abs_pitch = self.__get_log_abs_pitch(sample)
+        x_chroma, y_chroma = VoiceData.__get_x_y(sample, 'chroma')
+        x_fifths, y_fifths = VoiceData.__get_x_y(sample, 'fifths')
+        return [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
+
+    def get_nn_data(self, p_note=None, p_dur=None):
+        voice = 1
+        if not self.duration_data:
+            self.duration_data = [self.encoded_data[voice][0].copy()]
+            self.duration_data[0].append(1)
+            self.duration_data[0].append(self.raw_data[voice][0])
+            max_duration = 0
+            for idx, data in enumerate(self.encoded_data[voice][1:]):
+                # we also append the midi note to the data, these will be the labels for the NN
+                note = int(self.raw_data[voice][idx])
+                if data == self.duration_data[-1][0:5]:
+                    self.duration_data[-1][5] += 1
+                    # self.duration_data[-1][6] = note
+                    if self.duration_data[-1][0] != 0:
+                        max_duration = max(max_duration, self.duration_data[-1][5])
+                else:
+                    self.duration_data.append(data.copy())
+                    self.duration_data[-1].append(1)
+                    self.duration_data[-1].append(note)
+        if p_note:
+            # Appending the predicted samples to the already existing data is gong wrong here:
+            print(self.duration_data[-1])
+            print(len(self.duration_data))
+            v = self.__encode_single_sample(p_note) + [p_dur] + [p_note]
+            self.duration_data.append(v)
+            print(self.duration_data[-1])
+            print(len(self.duration_data))
+            # sys.exit()
+
+        data = pd.DataFrame(self.duration_data)
+        data = data.rename(columns={0: 'log pitch', 1: 'chroma x', 2: 'chroma y', 3: 'fifths x',
+                                    4: 'fifths y', 5: 'duration', 6: 'note'})
+        # normalize data
+        subset = ['log pitch', 'chroma x', 'chroma y', 'fifths x', 'fifths y']
+        data[subset] = (data[subset] - data[subset].mean()) / data[subset].std()
+
+        # Window the data
+        preceding_notes = 300
+        # df = pd.DataFrame({'data': [], 'label': []})
+        window_data = {'data': [], 'duration': [], 'note': []}
+        for idx, row in data.iterrows():
+            if idx <= preceding_notes:
+                continue
+
+            # y.append(np.array([data[0], data[5]]))
+            input_data = data[idx - preceding_notes:idx][
+                ['log pitch', 'chroma x', 'chroma y', 'fifths x', 'fifths y']]
+            input_data = np.array(input_data).flatten()
+            window_data['data'].append(input_data)
+            window_data['duration'].append(row['duration'])
+            window_data['note'].append(row['note'])
+
+        return pd.DataFrame(window_data)
+
     @staticmethod
     def encode_single_pitch(pitch):
         if pitch == 0:
@@ -68,16 +128,15 @@ class VoiceData:
             v = [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
         return v
 
-
     @staticmethod
     def encode_from_absolute_pitch(abs_pitch):
         pitch = VoiceData.get_pitch_from_absolute(abs_pitch)
         return VoiceData.encode_single_pitch(pitch)
 
-
     '''
     return logarithm of the absolute pitch
     '''
+
     @staticmethod
     def __get_abs_pitch(note):
         # 69 because this is a round integer in Hz
@@ -107,7 +166,7 @@ class VoiceData:
         min_p = 2 * math.log2(math.pow(2, ((VoiceData.__lowest_note - 69) / 12)) * 440)
         max_p = 2 * math.log2(math.pow(2, ((VoiceData.__highest_note - 69) / 12)) * 440)
 
-        return round(math.log2(math.pow(2, ((log_abs_pitch + max_p - (max_p - min_p)/2)/2))/440) * 12 + 69)
+        return round(math.log2(math.pow(2, ((log_abs_pitch + max_p - (max_p - min_p) / 2) / 2)) / 440) * 12 + 69)
 
     '''
     return x,y coordinates of the position of the note in the chroma circle, or circle of fifths
@@ -123,3 +182,7 @@ class VoiceData:
         x = VoiceData.__radius * math.cos(math.degrees(angle))
         y = VoiceData.__radius * math.sin(math.degrees(angle))
         return x, y
+
+    @staticmethod
+    def __flatten_list(l):
+        return [item for sublist in l for item in sublist]
