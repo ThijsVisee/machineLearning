@@ -19,7 +19,7 @@ def write_to_file(data, voice):
                 f.write(str(val) + '\n')
 
 
-def main(d, voice, preceding_notes, pred, write_all_data = False):
+def get_prediction(d, voice, preceding_notes, pred):
     duration_data = [d.encoded_data[voice][0].copy()]
     duration_data[0].append(1)
     max_duration = 0
@@ -68,20 +68,25 @@ def main(d, voice, preceding_notes, pred, write_all_data = False):
         #print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
         idx += duration
         count += 1
-
-    if(write_all_data):
-        write_to_file(duration_data, voice)
-    else:
-        write_to_file(duration_data[-count:], voice)
+    
+    return duration_data, count
 
 
 
 if __name__ == '__main__':
+
     VOICE = 0
     # values below are multiplied by 16 to get the actual number of notes from bars
     INCLUDED_PRECEDING_STEPS = 12 * 16
     PREDICTION = 24 * 16
 
+    write_all_data = False
+
     d = VoiceData()
 
-    model = main(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION, False)
+    prediction, predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION)
+
+    if(write_all_data):
+        write_to_file(prediction, VOICE)
+    else:
+        write_to_file(prediction[-predCount:], VOICE)
