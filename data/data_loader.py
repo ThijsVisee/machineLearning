@@ -73,7 +73,6 @@ class VoiceData:
                 note = int(self.raw_data[voice][idx])
                 if data == self.duration_data[-1][0:5]:
                     self.duration_data[-1][5] += 1
-                    # self.duration_data[-1][6] = note
                     if self.duration_data[-1][0] != 0:
                         max_duration = max(max_duration, self.duration_data[-1][5])
                 else:
@@ -92,14 +91,12 @@ class VoiceData:
         data[subset] = (data[subset] - data[subset].mean()) / data[subset].std()
 
         # Window the data
-        preceding_notes = 80
-        # df = pd.DataFrame({'data': [], 'label': []})
+        preceding_notes = 120
         window_data = {'data': [], 'duration': [], 'note': []}
         for idx, row in data.iterrows():
             if idx <= preceding_notes:
                 continue
 
-            # y.append(np.array([data[0], data[5]]))
             input_data = data[idx - preceding_notes:idx][
                 ['log pitch', 'chroma x', 'chroma y', 'fifths x', 'fifths y']]
             input_data = np.array(input_data).flatten()

@@ -1,120 +1,133 @@
 import os
-import sys
-
-from sklearn.metrics import mean_squared_error
 import numpy as np
 import tensorflow as tf
-from data.data_loader import VoiceData
+from sklearn.metrics import mean_squared_error
 from os.path import exists
 
 
-def compile_and_fit(model, data_train, data_val, name, loss, patience=25):
+def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
+    """
+    This function compiles and fits a tensorflow model
+    :param model: the neural network
+    :param df_train: the train dataset
+    :param df_val: the validation dataset
+    :param label: the label (either 'note' or 'duration'
+    :param loss: the loss function
+    :param patience: the patience of the training scheme
+    :return: a trained model
+    """
     # if model is already trained and saved, open it
-    if exists(f'{name}'):
-        return tf.keras.models.load_model(f'{os.getcwd()}/{name}/')
+    if exists(f'{label}_model'):
+        return tf.keras.models.load_model(f'{os.getcwd()}/{label}_model/')
+
     # unpack data
-    x_train, y_train = data_train
-    x_val, y_val = data_val
-    MAX_EPOCHS = 300
+    x_train, y_train = unpack_data(df=df_train, label=label)
+    x_val, y_val = unpack_data(df=df_val, label=label)
+    MAX_EPOCHS = 100
 
     # compile and fit
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=patience, mode='min')
     model.compile(loss=loss, optimizer=tf.optimizers.Adam(), metrics=[tf.metrics.MeanAbsoluteError()])
     model.fit(x=x_train, y=y_train, epochs=MAX_EPOCHS, validation_data=(x_val, y_val), callbacks=[early_stopping])
+
     # save model
-    model.save(name)
+    model.save(f'{label}_model')
     return model
 
 
-def model(data_train, data_val, input_shape, output_shape, name):
+def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, label):
+    """
+    this function builds a tensorflow model
+    :param df_train: the training dataset
+    :param df_val: the validation dataset
+    :param input_shape: the input shape of the neural network
+    :param output_shape: the output shape of the neural network
+    :param activation: the activation function
+    :param loss: the loss function
+    :param label: the label (either 'note' or 'duration')
+    :return: an un-compiled and un-trained model
+    """
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(units=input_shape, activation='relu'),
+        tf.keras.layers.Dense(units=64, activation='relu'),
         tf.keras.layers.Dense(units=128, activation='relu'),
-        tf.keras.layers.Dense(units=256, activation='relu'),
-        tf.keras.layers.Dense(units=128, activation='relu'),
-        tf.keras.layers.Dense(units=output_shape, activation='softmax')
+        tf.keras.layers.Dense(units=64, activation='relu'),
+        tf.keras.layers.Dense(units=output_shape, activation=activation)
     ])
 
-    return compile_and_fit(model=model, data_train=data_train, data_val=data_val, loss=tf.losses.SparseCategoricalCrossentropy(), name=name)
+    return compile_and_fit(model=model, df_train=df_train, df_val=df_val, loss=loss, label=label)
 
 
-def dur_model(data_train, data_val, input_shape, output_shape, name):
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(units=input_shape, activation='relu'),
-        tf.keras.layers.Dense(units=256, activation='relu'),
-        tf.keras.layers.Dense(units=256, activation='relu'),
-        tf.keras.layers.Dense(units=output_shape)
-    ])
+def unpack_data(df, label):
+    """
+    This function unpacks a pandas dataframe and returns the training data x, y
+    :param df: the pandas dataframe holding the dataset
+    :param label: the label (either 'note' or 'duration')
+    :return: the train/val/test data x, y
+    """
+    x = np.array(df['data'].to_list())
+    y = np.array(df[label].to_list())
+    return x, y
 
-    return compile_and_fit(model=model, data_train=data_train, data_val=data_val, loss=tf.losses.MeanSquaredError(), name=name)
 
-
-def main():
-    # Check for TensorFlow GPU access
-    print(f"TensorFlow has access to the following devices:\n{tf.config.list_physical_devices()}")
-
-    # See TensorFlow version
-    print(f"TensorFlow version: {tf.__version__}")
-
-    d = VoiceData()
-    df = d.get_nn_data()
-
-    # create train test val split
-    n = len(df)
-    train_df = df[0:int(n * 0.7)]
-    val_df = df[int(n * 0.7):int(n * 0.9)]
-    test_df = df[int(n * 0.9):]
-
-    print(f'Shape train data: {train_df.shape}')
-    print(f'Shape val data: {val_df.shape}')
-    print(f'Shape test data: {test_df.shape}')
-
-    input_shape = train_df['data'][0].shape[0]
-    x_train = np.array(train_df['data'].to_list())
-    y_train_note = np.array(train_df['note'].to_list())
-    y_train_dur = np.array(train_df['duration'].to_list())
-    x_val = np.array(val_df['data'].to_list())
-    y_val_note = np.array(val_df['note'].to_list())
-    y_val_dur = np.array(val_df['duration'].to_list())
-    x_test = np.array(test_df['data'].to_list())
-    y_test_note = np.array(test_df['note'].to_list())
-    y_test_dur = np.array(test_df['duration'].to_list())
-
-    note_model = model(data_train=[x_train, y_train_note], data_val=[x_val, y_val_note],
-                       input_shape=input_shape, output_shape=87, name='note_model')
-    duration_model = dur_model(data_train=[x_train, y_train_dur], data_val=[x_val, y_val_dur],
-                           input_shape=input_shape, output_shape=1, name='duration_model')
-
+def test_performance(df_test, note_model, duration_model):
+    """
+    This function tests the trained model on the test data
+    :param df_test: the pandas dataframe holding the test data
+    :param note_model: the model that is trained to predict the note
+    :param duration_model: the model that is trained to predict the duration
+    """
+    x_test, y_test_note = unpack_data(df=df_test, label='note')
+    _, y_test_dur = unpack_data(df=df_test, label='duration')
+    note_p, note_t, dur_p, dur_t = ([] for i in range(4))
     # test performance on test set
-    # for idx, sample in enumerate(x_test):
-    #     predicted_note = note_model.predict(np.array([sample, ]))
-    #     predicted_note = np.argmax(predicted_note)
-    #     predicted_dur = duration_model.predict(np.array([sample, ]))
-    #     note_p.append(predicted_note)
-    #     note_t.append(y_test_note[idx])
-    #     dur_p.append(predicted_dur[0][0])
-    #     dur_t.append(y_test_dur[idx])
-    #     print(predicted_note, y_test_note[idx])
-    #     print(f'Error Note: {round(mean_squared_error(note_t, note_p), 1)}     Error Dur: {round(mean_squared_error(dur_t, dur_p), 1)}')
+    for idx, sample in enumerate(x_test):
+        predicted_note = note_model.predict(np.array([sample, ]))
+        predicted_note = np.argmax(predicted_note)
+        predicted_dur = duration_model.predict(np.array([sample, ]))
+        note_p.append(predicted_note)
+        note_t.append(y_test_note[idx])
+        dur_p.append(predicted_dur[0][0])
+        dur_t.append(y_test_dur[idx])
+        print(predicted_note, y_test_note[idx])
+        print(f'Error Note: {round(mean_squared_error(note_t, note_p), 1)}'
+              f'    Error Duration: {round(mean_squared_error(dur_t, dur_p), 1)}')
 
-    for i in range(100):
+
+def predict(df, vd, note_model, duration_model, num_predictions=100):
+    """
+    This function predicts a given amount of new samples and appends it
+    to a copy of the original dataset
+    :param df: the original dataset
+    :param vd: instance of the VoiceData class
+    :param note_model: the model that is trained to predict the note
+    :param duration_model: the model that is trained to predict the duration
+    :param num_predictions: the number of prediction that should be made
+    :return: the dataset containing the original samples + the predicted samples
+    """
+    for i in range(num_predictions):
         last_sample = df['data'].iloc[-1]
         predicted_note = note_model.predict(np.array([last_sample, ]))
         predicted_note = np.argmax(predicted_note)
         predicted_dur = duration_model.predict(np.array([last_sample, ]))
-        df = d.get_nn_data(p_note=predicted_note, p_dur=int(predicted_dur[0][0]))
+        df = vd.get_nn_data(p_note=predicted_note, p_dur=int(predicted_dur[0][0]))
+        print(predicted_note, int(predicted_dur[0][0]))
+    return df
+
+
+def write_voice_to_file(df, filename='generated_voice'):
+    """
+    This function writes the (last 100) predictions to a txt file
+    :param df: the dataset containing the original samples + the predicted samples
+    :param filename: the name the generated file should have
+    """
     txt = []
     for index, row in df.tail(100).iterrows():
         dur = int(row['duration'])
         for i in range(dur):
             txt.append(str(int(row['note'])))
-    textfile = open("../data/file.txt", "w")
+    textfile = open(f'data/{filename}.txt', "w")
     for element in txt:
         textfile.write(element + '\n')
     textfile.close()
-
-    print("done")
-
-
-if __name__ == '__main__':
-    main()
+    print(f'Voice has been written to {filename}.txt')

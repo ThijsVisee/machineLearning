@@ -6,7 +6,7 @@ import os
 import sounddevice as sd
 
 # F = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
-F = np.loadtxt(f'{os.getcwd()}/../data/file.txt', usecols=range(1))
+F = np.loadtxt(f'{os.getcwd()}/../data/generated_voice.txt', usecols=range(1))
 
 
 chosenVoice = 0
@@ -19,7 +19,7 @@ sampleRate = 10000
 durationPerSymbol = 1/16
 ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
 
-soundvector1 = np.zeros(symbolicLength*ticksPerSymbol)
+soundvector1 = np.zeros(symbolicLength*ticksPerSymbol * 10)
 currentSymbol = voice[0]
 
 startSymbolIndex = 1

@@ -1,16 +1,54 @@
-from faulthandler import dump_traceback
 import numpy as np
-import pandas as pd
+import tensorflow as tf
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
+from model.neural_net import test_performance, predict, write_voice_to_file, nn_model
 
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 
-def main(d, voice, preceding_notes):
+def neural_network():
+    """
+    This function trains two neural networks. One to predict the midi note, and another
+    to predict the duration of the note. Then 100 new samples are predicted, and written
+    to a txt file.
+    """
+    # Check for TensorFlow GPU access
+    print(f"TensorFlow has access to the following devices:\n{tf.config.list_physical_devices()}")
+
+    # See TensorFlow version
+    print(f"TensorFlow version: {tf.__version__}")
+
+    vd = VoiceData()
+    df = vd.get_nn_data()
+
+    # create train-test-val split
+    n = len(df)
+    train_df = df[0:int(n * 0.7)]
+    val_df = df[int(n * 0.7):int(n * 0.9)]
+    test_df = df[int(n * 0.9):]
+
+    # create model to predict the midi note, and a model to predict the duration
+    input_shape = train_df['data'][0].shape[0]
+    note_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=87,
+                          activation='softmax', loss='sparse_categorical_crossentropy', label='note')
+    duration_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=1,
+                              activation=None, loss='mean_squared_error', label='duration')
+
+    # test the performance of the model on the test set
+    test_performance(df_test=test_df, note_model=note_model, duration_model=duration_model)
+
+    # predict new music and append to existing dataset:
+    df = predict(df=df, vd=vd, note_model=note_model, duration_model=duration_model)
+
+    # write only the predictions to a file
+    write_voice_to_file(df=df)
+
+
+def ridge_regression(d, voice, preceding_notes):
     duration_data = [d.encoded_data[voice][0].copy()]
     duration_data[0].append(1)
     max_duration = 0
@@ -49,9 +87,14 @@ def main(d, voice, preceding_notes):
         idx += duration
 
 
-if __name__ == '__main__':
+def main():
     VOICE = 1
     INCLUDED_PRECEDING_STEPS = 50
     d = VoiceData()
     # for i in range(dur):
-    model = main(d, VOICE, INCLUDED_PRECEDING_STEPS)
+    # model = ridge_regression(d, VOICE, INCLUDED_PRECEDING_STEPS)
+    neural_network()
+
+
+if __name__ == '__main__':
+    main()
