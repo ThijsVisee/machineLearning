@@ -5,10 +5,13 @@ from playsound import playsound
 import os
 import sounddevice as sd
 
-F = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
+# F = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
+F = np.loadtxt(f'{os.getcwd()}/../data/file.txt', usecols=range(1))
+
 
 chosenVoice = 0
-voice = F[:, chosenVoice]
+# voice = F[:, chosenVoice]
+voice = F
 
 symbolicLength = len(voice)
 baseFreq = 440

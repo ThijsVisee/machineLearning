@@ -1,5 +1,3 @@
-import sys
-from base64 import encode
 import math
 import numpy as np
 import os as os
@@ -83,14 +81,8 @@ class VoiceData:
                     self.duration_data[-1].append(1)
                     self.duration_data[-1].append(note)
         if p_note:
-            # Appending the predicted samples to the already existing data is gong wrong here:
-            print(self.duration_data[-1])
-            print(len(self.duration_data))
             v = self.__encode_single_sample(p_note) + [p_dur] + [p_note]
             self.duration_data.append(v)
-            print(self.duration_data[-1])
-            print(len(self.duration_data))
-            # sys.exit()
 
         data = pd.DataFrame(self.duration_data)
         data = data.rename(columns={0: 'log pitch', 1: 'chroma x', 2: 'chroma y', 3: 'fifths x',
@@ -100,7 +92,7 @@ class VoiceData:
         data[subset] = (data[subset] - data[subset].mean()) / data[subset].std()
 
         # Window the data
-        preceding_notes = 300
+        preceding_notes = 80
         # df = pd.DataFrame({'data': [], 'label': []})
         window_data = {'data': [], 'duration': [], 'note': []}
         for idx, row in data.iterrows():

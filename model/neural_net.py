@@ -8,7 +8,7 @@ from data.data_loader import VoiceData
 from os.path import exists
 
 
-def compile_and_fit(model, data_train, data_val, name, loss, patience=20):
+def compile_and_fit(model, data_train, data_val, name, loss, patience=25):
     # if model is already trained and saved, open it
     if exists(f'{name}'):
         return tf.keras.models.load_model(f'{os.getcwd()}/{name}/')
@@ -29,8 +29,9 @@ def compile_and_fit(model, data_train, data_val, name, loss, patience=20):
 def model(data_train, data_val, input_shape, output_shape, name):
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(units=input_shape, activation='relu'),
+        tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=256, activation='relu'),
-        tf.keras.layers.Dense(units=256, activation='relu'),
+        tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=output_shape, activation='softmax')
     ])
 
@@ -102,8 +103,16 @@ def main():
         predicted_note = np.argmax(predicted_note)
         predicted_dur = duration_model.predict(np.array([last_sample, ]))
         df = d.get_nn_data(p_note=predicted_note, p_dur=int(predicted_dur[0][0]))
-
-    df.to_csv('music.csv')
+    txt = []
+    for index, row in df.tail(100).iterrows():
+        dur = int(row['duration'])
+        for i in range(dur):
+            txt.append(str(int(row['note'])))
+    textfile = open("../data/file.txt", "w")
+    for element in txt:
+        textfile.write(element + '\n')
+    textfile.close()
+    print("done")
 
 
 if __name__ == '__main__':
