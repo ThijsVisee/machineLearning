@@ -9,6 +9,7 @@ import sounddevice as sd
 F = np.loadtxt(f'{os.getcwd()}/../data/generated_voice.txt', usecols=range(1))
 
 
+
 chosenVoice = 0
 # voice = F[:, chosenVoice]
 voice = F

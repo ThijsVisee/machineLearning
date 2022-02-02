@@ -68,7 +68,7 @@ class VoiceData:
         x_fifths, y_fifths = VoiceData.__get_x_y(sample, 'fifths')
         return [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
 
-    def get_nn_data(self, p_note=None, p_dur=None):
+    def get_nn_data(self, p_note=None, p_dur=None, preceding_notes=80):
         """
         This function generates the pandas dataframe containing the train/test/val data.
         If p_note is not passed then this function assumes that the data
@@ -76,6 +76,7 @@ class VoiceData:
         appropriate format and appended to the data. Same for p_dur.
         :param p_note: predicted note
         :param p_dur: predicted duration
+        :param preceding_notes: the number of preceding notes is one data window
         :return:
         """
         voice = 1
@@ -107,7 +108,6 @@ class VoiceData:
         data[subset] = (data[subset] - data[subset].mean()) / data[subset].std()
 
         # Window the data
-        preceding_notes = 120
         window_data = {'data': [], 'duration': [], 'note': []}
         for idx, row in data.iterrows():
             if idx <= preceding_notes:

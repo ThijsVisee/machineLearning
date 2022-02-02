@@ -88,11 +88,11 @@ def ridge_regression(d, voice, preceding_notes):
 
 
 def main():
-    VOICE = 1
-    INCLUDED_PRECEDING_STEPS = 50
-    d = VoiceData()
-    # for i in range(dur):
-    # model = ridge_regression(d, VOICE, INCLUDED_PRECEDING_STEPS)
+    # VOICE = 1
+    # INCLUDED_PRECEDING_STEPS = 50
+    # d = VoiceData()
+    # # for i in range(dur):
+    # # model = ridge_regression(d, VOICE, INCLUDED_PRECEDING_STEPS)
     neural_network()
 
 

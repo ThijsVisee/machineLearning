@@ -17,7 +17,7 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
     :return: a trained model
     """
     # if model is already trained and saved, open it
-    if exists(f'{label}_model'):
+    if exists(f'trained_models/{label}_model'):
         return tf.keras.models.load_model(f'{os.getcwd()}/{label}_model/')
 
     # unpack data
@@ -31,7 +31,7 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
     model.fit(x=x_train, y=y_train, epochs=MAX_EPOCHS, validation_data=(x_val, y_val), callbacks=[early_stopping])
 
     # save model
-    model.save(f'{label}_model')
+    model.save(f'trained_models/{label}_model')
     return model
 
 
