@@ -22,46 +22,62 @@ class VoiceData:
         self.__encode_pitch()
 
     def __load_voices(self, include_zeroes=False):
+        """
+        Loads the voices from a txt file
+        :param include_zeroes: bool to determine if zeros should be included in the data
+        :return: the raw data
+        """
         raw_data = np.loadtxt(self.data_path, dtype=int)
         raw_data = np.array([element for element in raw_data if element[0] != 0])
         samples, voices = raw_data.shape
         self.raw_data = np.array([raw_data[:, i] for i in range(voices)])
         print("Raw Data Loaded Successfully!")
 
-    '''
-    Encode pitch of each note in 5dim vector:
-    [
-    0. value proportional to the logarithm of the absolute pitch of the note
-    1. x coordinates of the position of the note in the chroma circle
-    2. y coordinates of the position of the note in the chroma circle
-    3. x coordinates of the note in the circle of fifths
-    4. y coordinates of the note in the circle of fifths
-    ]
-    '''
-
     def __encode_pitch(self):
+        """
+        Encode pitch of each note in 5dim vector:
+        [
+        0. value proportional to the logarithm of the absolute pitch of the note
+        1. x coordinates of the position of the note in the chroma circle
+        2. y coordinates of the position of the note in the chroma circle
+        3. x coordinates of the note in the circle of fifths
+        4. y coordinates of the note in the circle of fifths
+        ]
+        :return: encoded pitch
+        """
         for idx, voice in enumerate(self.raw_data):
             pitch_encoded_voice = []
             for note in voice:
                 if note == 0:
                     v = [0, 0, 0, 0, 0]
                 else:
-                    log_abs_pitch = self.__get_log_abs_pitch(note)
-                    x_chroma, y_chroma = VoiceData.__get_x_y(note, 'chroma')
-                    x_fifths, y_fifths = VoiceData.__get_x_y(note, 'fifths')
-                    v = [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
+                    v = self.__encode_single_sample(note)
                 pitch_encoded_voice.append(v)
             self.encoded_data.append(pitch_encoded_voice)
             print(f"Voice {idx} encoded")
         print("Pitch Encoded Successfully!")
 
     def __encode_single_sample(self, sample):
+        """
+        Encodes a single note as a 5 dimensional vector.
+        :param sample: the note
+        :return: a 5 dim vector of the form [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
+        """
         log_abs_pitch = self.__get_log_abs_pitch(sample)
         x_chroma, y_chroma = VoiceData.__get_x_y(sample, 'chroma')
         x_fifths, y_fifths = VoiceData.__get_x_y(sample, 'fifths')
         return [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
 
     def get_nn_data(self, p_note=None, p_dur=None):
+        """
+        This function generates the pandas dataframe containing the train/test/val data.
+        If p_note is not passed then this function assumes that the data
+        is generated for the first time. If p_note is passed, it is converted to the
+        appropriate format and appended to the data. Same for p_dur.
+        :param p_note: predicted note
+        :param p_dur: predicted duration
+        :return:
+        """
         voice = 1
         if not self.duration_data:
             self.duration_data = [self.encoded_data[voice][0].copy()]
