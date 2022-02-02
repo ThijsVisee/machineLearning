@@ -112,6 +112,7 @@ def main():
     for element in txt:
         textfile.write(element + '\n')
     textfile.close()
+
     print("done")
 
 
