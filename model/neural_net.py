@@ -1,8 +1,13 @@
 import os
+import random
+import time
+
 import numpy as np
 import tensorflow as tf
+from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 from os.path import exists
+import heapq
 
 
 def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
@@ -17,8 +22,8 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
     :return: a trained model
     """
     # if model is already trained and saved, open it
-    if exists(f'trained_models/{label}_model'):
-        return tf.keras.models.load_model(f'{os.getcwd()}/{label}_model/')
+    if exists(f'trained_models{os.sep}{label}_model'):
+        return tf.keras.models.load_model(f'{os.getcwd()}{os.sep}trained_models{os.sep}{label}_model{os.sep}')
 
     # unpack data
     x_train, y_train = unpack_data(df=df_train, label=label)
@@ -31,7 +36,7 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
     model.fit(x=x_train, y=y_train, epochs=MAX_EPOCHS, validation_data=(x_val, y_val), callbacks=[early_stopping])
 
     # save model
-    model.save(f'trained_models/{label}_model')
+    model.save(f'trained_models{os.sep}{label}_model')
     return model
 
 
@@ -51,7 +56,7 @@ def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, labe
         tf.keras.layers.Dense(units=input_shape, activation='relu'),
         tf.keras.layers.Dense(units=64, activation='relu'),
         tf.keras.layers.Dense(units=128, activation='relu'),
-        tf.keras.layers.Dense(units=64, activation='relu'),
+        # tf.keras.layers.Dense(units=64, activation='relu'),
         tf.keras.layers.Dense(units=output_shape, activation=activation)
     ])
 
@@ -63,7 +68,7 @@ def unpack_data(df, label):
     This function unpacks a pandas dataframe and returns the training data x, y
     :param df: the pandas dataframe holding the dataset
     :param label: the label (either 'note' or 'duration')
-    :return: the train/val/test data x, y
+    :return: the train{os.sep}val{os.sep}test data x, y
     """
     x = np.array(df['data'].to_list())
     y = np.array(df[label].to_list())
@@ -94,7 +99,7 @@ def test_performance(df_test, note_model, duration_model):
               f'    Error Duration: {round(mean_squared_error(dur_t, dur_p), 1)}')
 
 
-def predict(df, vd, note_model, duration_model, num_predictions=100):
+def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot=False):
     """
     This function predicts a given amount of new samples and appends it
     to a copy of the original dataset
@@ -103,16 +108,32 @@ def predict(df, vd, note_model, duration_model, num_predictions=100):
     :param note_model: the model that is trained to predict the note
     :param duration_model: the model that is trained to predict the duration
     :param num_predictions: the number of prediction that should be made
+    :param a: alpha, the chance of selecting the second best note
+    :param plot: plot the prediction distribution
     :return: the dataset containing the original samples + the predicted samples
     """
     for i in range(num_predictions):
         last_sample = df['data'].iloc[-1]
-        predicted_note = note_model.predict(np.array([last_sample, ]))
-        predicted_note = np.argmax(predicted_note)
+        predicted_note = note_model.predict(np.array([last_sample, ]))[0]
+        if plot:
+            plot_prediction_dist(predicted_note)
+        # select the highest predicted note with 90% chance, else second highest
+        predicted_note = heapq.nlargest(2, range(len(predicted_note)), key=predicted_note.__getitem__)
+        predicted_note = predicted_note[0] if random.random() > a else predicted_note[1]
         predicted_dur = duration_model.predict(np.array([last_sample, ]))
         df = vd.get_nn_data(p_note=predicted_note, p_dur=int(predicted_dur[0][0]))
-        print(predicted_note, int(predicted_dur[0][0]))
     return df
+
+
+def plot_prediction_dist(prediction):
+    x = prediction
+    y = [i for i in range(87)]
+    plt.bar(y, x, align='center')
+    plt.xlabel('Bins')
+    plt.ylabel('Frequency')
+    plt.show()
+    time.sleep(5)
+    plt.close()
 
 
 def write_voice_to_file(df, filename='generated_voice'):
@@ -126,7 +147,7 @@ def write_voice_to_file(df, filename='generated_voice'):
         dur = int(row['duration'])
         for i in range(dur):
             txt.append(str(int(row['note'])))
-    textfile = open(f'data/{filename}.txt', "w")
+    textfile = open(f'data{os.sep}{filename}.txt', "w")
     for element in txt:
         textfile.write(element + '\n')
     textfile.close()

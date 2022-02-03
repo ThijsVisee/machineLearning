@@ -81,6 +81,7 @@ class VoiceData:
         """
         voice = 1
         if not self.duration_data:
+            print('hit')
             self.duration_data = [self.encoded_data[voice][0].copy()]
             self.duration_data[0].append(1)
             self.duration_data[0].append(self.raw_data[voice][0])
