@@ -1,17 +1,25 @@
 import numpy as np
 import os
+from analysis.visualization import visualize_single_voice
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from analysis.validation import *
-from analysis.analysis import *
+from analysis.analysis import get_voice_statistics
 
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
+def check_dir_exists(dir):
+    path = str(dir)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def write_to_file(data, voice):
-    fTitle = f'{os.getcwd()}/out/output{str(voice+1)}.txt'
+    fTitle = f'{os.getcwd()}/out/voice{str(voice+1)}.txt'
+
+    check_dir_exists('out')
 
     with open(fTitle,'w') as f:
 
@@ -100,6 +108,6 @@ if __name__ == '__main__':
     else:
         write_to_file(prediction[-predCount:], VOICE)
 
-    #visualize_results(prediction)
+    visualize_single_voice(prediction,VOICE)
 
     #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))
