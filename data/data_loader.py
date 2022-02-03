@@ -101,6 +101,7 @@ class VoiceData:
         return log_abs_pitch
 
     # reverse of get_log_abs_pitch
+    @staticmethod
     def get_pitch_from_absolute(log_abs_pitch):
 
         min_p = 2 * math.log2(math.pow(2, ((VoiceData.__lowest_note - 69) / 12)) * 440)
@@ -111,6 +112,7 @@ class VoiceData:
     '''
     return the original piano key indizes from the encoded data
     '''
+    @staticmethod
     def get_voice_from_encoding(encoded_data):
         piano_notes = []
         for note in encoded_data:

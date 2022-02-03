@@ -4,3 +4,6 @@ pycparser==2.21
 sounddevice==0.4.3
 pandas
 matplotlib
+
+#development
+pylint
