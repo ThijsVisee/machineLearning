@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import tensorflow as tf
 
@@ -33,9 +35,13 @@ def neural_network():
 
     # create model to predict the midi note, and a model to predict the duration
     input_shape = train_df['data'][0].shape[0]
-    note_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=87,
-                          activation='softmax', loss='sparse_categorical_crossentropy', label='note')
-    duration_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=1,
+    output_shape_note = len(train_df['note'][0])
+    output_shape_duration = len(train_df['duration'][0])
+
+    note_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_note,
+                          activation='softmax', loss='mean_squared_error', label='note')
+
+    duration_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_duration,
                               activation=None, loss='mean_squared_error', label='duration')
 
     # test the performance of the model on the test set

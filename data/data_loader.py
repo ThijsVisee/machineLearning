@@ -1,4 +1,6 @@
 import math
+import sys
+
 import numpy as np
 import os as os
 import pandas as pd
@@ -68,7 +70,7 @@ class VoiceData:
         x_fifths, y_fifths = VoiceData.__get_x_y(sample, 'fifths')
         return [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
 
-    def get_nn_data(self, p_note=None, p_dur=None, preceding_notes=80):
+    def get_nn_data(self, p_note=None, p_dur=None, preceding_notes=60):
         """
         This function generates the pandas dataframe containing the train/test/val data.
         If p_note is not passed then this function assumes that the data
@@ -81,10 +83,11 @@ class VoiceData:
         """
         voice = 1
         if not self.duration_data:
-            print('hit')
             self.duration_data = [self.encoded_data[voice][0].copy()]
             self.duration_data[0].append(1)
-            self.duration_data[0].append(self.raw_data[voice][0])
+            note_vector = [0.0] * 87
+            note_vector[self.raw_data[voice][0]] = 1.0
+            self.duration_data[0].append(note_vector)
             max_duration = 0
             for idx, data in enumerate(self.encoded_data[voice][1:]):
                 # we also append the midi note to the data, these will be the labels for the NN
@@ -96,12 +99,29 @@ class VoiceData:
                 else:
                     self.duration_data.append(data.copy())
                     self.duration_data[-1].append(1)
-                    self.duration_data[-1].append(note)
+                    note_vector = [0.0] * 87
+                    note_vector[note] = 1.0
+                    self.duration_data[-1].append(note_vector)
+
+            for item in self.duration_data:
+                duration_vector = [0] * 25
+                index = item[5] if item[5] <= 24 else 0
+                duration_vector[index] = 1
+                item[5] = duration_vector
+
         if p_note:
-            v = self.__encode_single_sample(p_note) + [p_dur] + [p_note]
+            # encode the note and duration as a probability vector
+            note_vector = [0.0] * 87
+            duration_vector = [0] * 25
+            note_vector[p_note] = 1.0
+            duration_vector[p_dur] = 1.0
+
+            v = self.__encode_single_sample(p_note) + [duration_vector] + [note_vector]
             self.duration_data.append(v)
 
-        data = pd.DataFrame(self.duration_data)
+        # copy the duration data so as to not disturb its values
+        data = self.duration_data.copy()
+        data = pd.DataFrame(data)
         data = data.rename(columns={0: 'log pitch', 1: 'chroma x', 2: 'chroma y', 3: 'fifths x',
                                     4: 'fifths y', 5: 'duration', 6: 'note'})
         # normalize data

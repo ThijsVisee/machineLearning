@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 import time
 
 import numpy as np
@@ -8,9 +9,10 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 from os.path import exists
 import heapq
+import keras.backend as K
 
 
-def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
+def compile_and_fit(model, df_train, df_val, label, loss, patience=12):
     """
     This function compiles and fits a tensorflow model
     :param model: the neural network
@@ -21,8 +23,9 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
     :param patience: the patience of the training scheme
     :return: a trained model
     """
+    load = False
     # if model is already trained and saved, open it
-    if exists(f'trained_models{os.sep}{label}_model'):
+    if exists(f'trained_models{os.sep}{label}_model') and load:
         return tf.keras.models.load_model(f'{os.getcwd()}{os.sep}trained_models{os.sep}{label}_model{os.sep}')
 
     # unpack data
@@ -40,6 +43,16 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=20):
     return model
 
 
+def custom_loss(y_true, y_pred):
+    loss = K.abs(y_pred-y_true)
+    loss = K.log(loss)
+    # p = [abs(p[i] - p[i]) for i in range(len(p))]
+    # calculate loss, using y_pred
+    # loss = (1/len(p))  tf.math.cumsum(tf.math.log(p))
+    # loss = 1/len(p) * sum(tf.math.log(p))
+    return loss
+
+
 def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, label):
     """
     this function builds a tensorflow model
@@ -55,6 +68,7 @@ def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, labe
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(units=input_shape, activation='relu'),
         tf.keras.layers.Dense(units=64, activation='relu'),
+        tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=128, activation='relu'),
         # tf.keras.layers.Dense(units=64, activation='relu'),
         tf.keras.layers.Dense(units=output_shape, activation=activation)
@@ -85,18 +99,22 @@ def test_performance(df_test, note_model, duration_model):
     x_test, y_test_note = unpack_data(df=df_test, label='note')
     _, y_test_dur = unpack_data(df=df_test, label='duration')
     note_p, note_t, dur_p, dur_t = ([] for i in range(4))
+    print("TESTING ON TEST DATA:")
     # test performance on test set
     for idx, sample in enumerate(x_test):
         predicted_note = note_model.predict(np.array([sample, ]))
-        predicted_note = np.argmax(predicted_note)
+        predicted_note = np.argmax(predicted_note[0])
         predicted_dur = duration_model.predict(np.array([sample, ]))
+        predicted_dur = np.argmax(predicted_dur[0])
+
         note_p.append(predicted_note)
-        note_t.append(y_test_note[idx])
-        dur_p.append(predicted_dur[0][0])
-        dur_t.append(y_test_dur[idx])
-        print(predicted_note, y_test_note[idx])
-        print(f'Error Note: {round(mean_squared_error(note_t, note_p), 1)}'
-              f'    Error Duration: {round(mean_squared_error(dur_t, dur_p), 1)}')
+        note_t.append(np.argmax(y_test_note[idx]))
+        dur_p.append(predicted_dur)
+        dur_t.append(np.argmax(y_test_dur[idx]))
+        print(f'Predicted note: {predicted_note} Real Note: {np.argmax(y_test_note[idx])} '
+              f'Error: {round(mean_squared_error(note_t, note_p), 1)} '
+              f'Predicted duration: {predicted_dur} Real duration: {np.argmax(y_test_dur[idx])} '
+              f'Error: {round(mean_squared_error(dur_t, dur_p), 1)}')
 
 
 def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot=False):
@@ -112,6 +130,7 @@ def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot
     :param plot: plot the prediction distribution
     :return: the dataset containing the original samples + the predicted samples
     """
+    print(f'PREDICTING {num_predictions} NOTES and DURATIONS:')
     for i in range(num_predictions):
         last_sample = df['data'].iloc[-1]
         predicted_note = note_model.predict(np.array([last_sample, ]))[0]
@@ -121,7 +140,9 @@ def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot
         predicted_note = heapq.nlargest(2, range(len(predicted_note)), key=predicted_note.__getitem__)
         predicted_note = predicted_note[0] if random.random() > a else predicted_note[1]
         predicted_dur = duration_model.predict(np.array([last_sample, ]))
-        df = vd.get_nn_data(p_note=predicted_note, p_dur=int(predicted_dur[0][0]))
+        predicted_dur = np.argmax(predicted_dur[0])
+        print('Predicted note: ', predicted_note, 'Predicted duration: ', predicted_dur)
+        df = vd.get_nn_data(p_note=predicted_note, p_dur=predicted_dur)
     return df
 
 
@@ -144,9 +165,9 @@ def write_voice_to_file(df, filename='generated_voice'):
     """
     txt = []
     for index, row in df.tail(100).iterrows():
-        dur = int(row['duration'])
+        dur = int(np.argmax(row['duration']))
         for i in range(dur):
-            txt.append(str(int(row['note'])))
+            txt.append(str(int(np.argmax(row['note']))))
     textfile = open(f'data{os.sep}{filename}.txt', "w")
     for element in txt:
         textfile.write(element + '\n')
