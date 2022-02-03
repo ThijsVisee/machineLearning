@@ -3,17 +3,17 @@ import math
 import time
 import os
 import sounddevice as sd
+import soundfile as sf
 
 '''
 play a single voice
 '''
 
 # this code is adapted from the matlab file provided for the project
-def play_voice(voice):
+def get_sound_vector(voice, sampleRate = 10000):
 
     symbolicLength = len(voice)
     baseFreq = 440
-    sampleRate = 10000
     durationPerSymbol = 1/16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
 
@@ -48,9 +48,21 @@ def play_voice(voice):
             startSymbolIndex = x
         x = x + 1
 
-    sd.play(soundvector1, 10000)
+    return soundvector1
+
+def play_voice(voice, sampleRate = 10000):
+
+    sound = get_sound_vector(voice, sampleRate)
+
+    sd.play(sound, 10000)
     time.sleep(50)
     sd.stop()
+
+def create_audio_file(voice, sampleRate = 10000):
+
+    sound = get_sound_vector(voice, sampleRate)
+
+    sf.write('file.wav',sound, 10000)
 
 if __name__ == '__main__':
 
@@ -59,6 +71,8 @@ if __name__ == '__main__':
     # chosenVoice = 0
     # voice = F[:, chosenVoice]
 
-    voice = np.loadtxt(f'{os.getcwd()}/../out/prediction.txt')
+    voice = np.loadtxt(f'{os.getcwd()}/../out/voice1.txt')
 
     play_voice(voice)
+
+    create_audio_file(voice)
