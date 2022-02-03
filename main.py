@@ -4,6 +4,7 @@ import os
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from analysis.validation import *
+from analysis.analysis import *
 
 
 def flatten_list(l):
@@ -13,11 +14,11 @@ def write_to_file(data, voice):
     fTitle = f'{os.getcwd()}/out/output{str(voice+1)}.txt'
 
     with open(fTitle,'w') as f:
-        for note in data:
-            val = VoiceData.get_pitch_from_absolute(note[0]) if note[0] != 0 else int(note[0])
-            dur = note[5]
-            for d in range(int(dur)):
-                f.write(str(val) + '\n')
+
+        keys = VoiceData.get_voice_from_encoding(data)
+
+        for key in keys:
+            f.write(str(key) + '\n')
 
 
 def get_prediction(d, voice, preceding_notes, pred):
@@ -84,17 +85,21 @@ if __name__ == '__main__':
 
     write_all_data = True
 
-    d = VoiceData('simpleOctave.txt')
+    d = VoiceData('data.txt', True)
+
+    get_voice_statistics(d.raw_data[VOICE])
 
     prediction, predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION)
 
     prediction = np.array(prediction)
+
+    get_voice_statistics(prediction)
 
     if(write_all_data):
         write_to_file(prediction, VOICE)
     else:
         write_to_file(prediction[-predCount:], VOICE)
 
-    #visualize_results(f"output{str(VOICE+1)}")
+    #visualize_results(prediction)
 
     #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))

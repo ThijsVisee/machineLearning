@@ -10,18 +10,19 @@ class VoiceData:
     __lowest_note = 1
     __highest_note = 88
     
-    def __init__(self, filepath):
+    def __init__(self, filepath, include_zeroes = False):
         self.raw_data = []
         self.encoded_data = []
         self.data_path = f'{os.path.split(__file__)[0]}{os.sep}{filepath}'
         self.__lowest_note = 35
         self.__highest_note = 74
-        self.__load_voices()
+        self.__load_voices(include_zeroes)
         self.__encode_pitch()
 
-    def __load_voices(self, include_zeroes=False):
+    def __load_voices(self, include_zeroes):
         raw_data = np.loadtxt(self.data_path, dtype=int)
-        raw_data = np.array([element for element in raw_data if element[0] != 0])
+        if(not include_zeroes):
+            raw_data = np.array([element for element in raw_data if element[0] != 0])
         samples, voices = raw_data.shape
         self.raw_data = np.array([raw_data[:, i] for i in range(voices)])
         print("Raw Data Loaded Successfully!")
@@ -108,9 +109,19 @@ class VoiceData:
         return round(math.log2(math.pow(2, ((log_abs_pitch + max_p - (max_p - min_p)/2)/2))/440) * 12 + 69)
 
     '''
+    return the original piano key indizes from the encoded data
+    '''
+    def get_voice_from_encoding(encoded_data):
+        piano_notes = []
+        for note in encoded_data:
+            for d in range(int(note[5])):
+                piano_notes.append(VoiceData.get_pitch_from_absolute(note[0]) if note[0] != 0 else int(note[0]))
+        
+        return np.array(piano_notes)
+
+    '''
     return x,y coordinates of the position of the note in the chroma circle, or circle of fifths
     '''
-
     @staticmethod
     def __get_x_y(note, circle):
         note = ((note - 55) % 12)

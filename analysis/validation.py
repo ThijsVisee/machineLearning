@@ -1,7 +1,6 @@
 import math
-import os
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 '''
 calculate the loss
@@ -20,12 +19,3 @@ def msle(hyp, val):
     err = map(lambda x, y: math.pow(math.log10(x+1) - math.log10(y+1),2), hyp, val)
 
     return np.mean(list(err))
-
-'''
-print a simple plot of the notes
-'''
-def visualize_results(filepath):
-    fTitle = f'{os.getcwd()}/out/{filepath}.txt'
-    file = np.loadtxt(fTitle, dtype=int)
-    plt.plot(file)
-    plt.show()
