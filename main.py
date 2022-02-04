@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
-from model.neural_net import test_performance, predict, write_voice_to_file, nn_model
+from model.neural_net import test_performance, predict, write_voice_to_file, nn_model, write_4_voices_to_file
 
 
 def flatten_list(l):
@@ -102,7 +102,9 @@ def main():
     # d = VoiceData()
     # # for i in range(dur):
     # # model = ridge_regression(d, VOICE, INCLUDED_PRECEDING_STEPS)
+
     neural_network()
+    #write_4_voices_to_file()
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import os
 import random
 import time
+import os as os
 
 import numpy as np
 import tensorflow as tf
@@ -161,3 +162,26 @@ def write_voice_to_file(df, filename='generated_voice'):
         textfile.write(element + '\n')
     textfile.close()
     print(f'Voice has been written to {filename}.txt')
+
+
+def write_4_voices_to_file(filename = 'generated_voices'):
+    F = np.loadtxt(f'{os.getcwd()}/data/generated_voice.txt', usecols=range(1))
+
+
+    voice_1 = np.loadtxt(f'{os.getcwd()}/predictions/voice1.txt', usecols=range(1))
+    voice_2 = np.loadtxt(f'{os.getcwd()}/predictions/voice2.txt', usecols=range(1))
+    voice_3 = np.loadtxt(f'{os.getcwd()}/predictions/voice3.txt', usecols=range(1))
+    voice_4 = np.loadtxt(f'{os.getcwd()}/predictions/voice4.txt', usecols=range(1))
+
+    textfile = open(f'data{os.sep}{filename}.txt', "w")
+    i = 0
+    for n in voice_4:
+        textfile.write(str(int(voice_1[i])) + ' ' + str(int(voice_2[i])) + ' ' + str(int(voice_3[i])) + ' ' + str(int(voice_4[i]))+ '\n')
+        i = i + 1
+
+    textfile.close()
+
+
+
+
+
