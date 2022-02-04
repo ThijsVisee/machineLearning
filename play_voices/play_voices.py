@@ -54,15 +54,30 @@ def play_voice(voice, sampleRate = 10000):
 
     sound = get_sound_vector(voice, sampleRate)
 
-    sd.play(sound, 10000)
+    sd.play(sound, sampleRate)
     time.sleep(50)
+    sd.stop()
+
+def play_all_voices(data, sampleRate = 10000):
+
+    durationPerSymbol = 1/16
+    ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
+
+    sound = np.zeros(len(data)*ticksPerSymbol)
+    for voice in np.transpose(data):
+        sound = sound + get_sound_vector(voice, sampleRate)
+    
+    sound = np.array(sound)
+
+    sd.play(np.transpose(sound), sampleRate)
+    time.sleep(90)
     sd.stop()
 
 def create_audio_file(voice, sampleRate = 10000):
 
     sound = get_sound_vector(voice, sampleRate)
 
-    sf.write('file.wav',sound, 10000)
+    sf.write('file.wav',sound, sampleRate)
 
 if __name__ == '__main__':
 
@@ -71,8 +86,10 @@ if __name__ == '__main__':
     # chosenVoice = 0
     # voice = F[:, chosenVoice]
 
-    voice = np.loadtxt(f'{os.getcwd()}/../out/voice1.txt')
+    #voice = np.loadtxt(f'{os.getcwd()}/../out/voice1.txt')
 
-    play_voice(voice)
+    voices = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
 
-    create_audio_file(voice)
+    play_all_voices(voices)
+
+    #create_audio_file(voice)

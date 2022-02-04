@@ -6,7 +6,7 @@ from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from analysis.validation import *
 from analysis.analysis import get_voice_statistics
-from play_voices.play_voices import play_voice
+from play_voices.play_voices import play_all_voices, play_voice
 
 
 def flatten_list(l):
@@ -96,21 +96,31 @@ if __name__ == '__main__':
 
     d = VoiceData('data.txt', True)
 
-    get_voice_statistics(d.raw_data[VOICE])
+    allPred = []
+    allVoices = []
 
-    prediction, predCount = get_prediction(d, VOICE, INCLUDED_PRECEDING_STEPS, PREDICTION)
+    for vDx, v in enumerate(d.encoded_data):
 
-    prediction = np.array(prediction)
+        get_voice_statistics(d.raw_data[vDx])
 
-    get_voice_statistics(prediction)
+        prediction, predCount = get_prediction(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
 
-    if(write_all_data):
-        write_to_file(prediction, VOICE)
-    else:
-        write_to_file(prediction[-predCount:], VOICE)
+        prediction = np.array(prediction)
 
-    visualize_single_voice(prediction,VOICE)
+        get_voice_statistics(prediction)
 
-    play_voice(VoiceData.get_voice_from_encoding(prediction))
+        if(write_all_data):
+            write_to_file(prediction, vDx)
+        else:
+            write_to_file(prediction[-predCount:], vDx)
+
+        visualize_single_voice(prediction, vDx)
+
+        allPred.append(prediction)
+        allVoices.append(VoiceData.get_voice_from_encoding(prediction))
+
+        #play_voice(VoiceData.get_voice_from_encoding(prediction))
+
+    play_all_voices(allVoices)
 
     #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))
