@@ -232,3 +232,24 @@ class VoiceData:
     @staticmethod
     def __flatten_list(l):
         return [item for sublist in l for item in sublist]
+
+    def get_duration_data(self, voice):
+        duration_data = [self.encoded_data[voice][0].copy()]
+        duration_data[0].append(1)
+
+        for data in self.encoded_data[voice][1:]:
+            if data == duration_data[-1][0:5]:
+                duration_data[-1][5] += 1
+            else:
+                duration_data.append(data.copy())
+                duration_data[-1].append(1)
+ 
+        return duration_data
+    
+
+    def get_min_max_voice_value(self, voice):
+        min_note = self.raw_data[voice].min()
+        max_note = self.raw_data[voice].max()
+        return min_note, max_note
+
+

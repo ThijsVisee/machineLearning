@@ -11,6 +11,9 @@ from analysis.analysis import get_voice_statistics
 from play_voices.play_voices import create_audio_file, play_all_voices, play_voice
 
 
+from scipy.spatial import distance
+from tqdm import tqdm
+
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
@@ -77,30 +80,43 @@ def neural_network():
 
 
 def ridge_regression(d, voice, preceding_notes, pred):
-    duration_data = [d.encoded_data[voice][0].copy()]
-    duration_data[0].append(1)
-    max_duration = 0
-    for idx, data in enumerate(d.encoded_data[voice][1:]):
-        if data == duration_data[-1][0:5]:
-            duration_data[-1][5] += 1
-            if duration_data[-1][0] != 0:
-                max_duration = max(max_duration, duration_data[-1][5])
-        else:
-            duration_data.append(data.copy())
-            duration_data[-1].append(1)
+    raw_data = d.raw_data[voice]
+    duration_data = d.get_duration_data(voice)
+    min_note, max_note = d.get_min_max_voice_value(voice)
+
+    pitches_original = [0] * (max_note - min_note + 2)
+    for note in raw_data:
+        pitches_original[note - min_note] += 1
+    
+    pitches_dur = [0] * (max_note - min_note + 2)
+    for dur_note in duration_data:
+        pitches
 
     X = []
-    y = []
+    y_note = []
+    y_duration = []
     for idx, data in enumerate(duration_data):
         if idx <= preceding_notes:
             continue
-        y.append(np.array([data[0], data[5]]))
+
+        y_note.append([0] * (max_note - min_note + 2))
+        y_duration.append([0] * 16)
+        y_duration[-1][min(data[5], 16) - 1] += 1
+        y_note[-1][round(VoiceData.get_pitch_from_absolute(data[0])) - min_note] += 1
         X.append(flatten_list(duration_data[idx - preceding_notes:idx]))
 
+    # Create input and output data
     X = np.array(X).T
-    y = np.array(y)
+    y_duration = np.array(y_duration)
+    y_note = np.array(y_note)
 
-    model = LinearRegression(X, y, ridge_alpha=0.005)
+    # Train the linear regression model
+    note_model = LinearRegression(X, y_note, ridge_alpha=0.005)
+    duration_model = LinearRegression(X, y_duration, ridge_alpha=0.005)
+
+    previous_pitch = -1
+    durations = [0] * 16
+    pitches = [0] * (max_note - min_note + 2)
 
     idx = 0
 
@@ -108,24 +124,46 @@ def ridge_regression(d, voice, preceding_notes, pred):
     count = 0
 
     while idx < pred:
-        predicted_pitch, duration = model.predict(flatten_list(duration_data[-preceding_notes:]))
+        # Perform the prediction
+        input = flatten_list(duration_data[-preceding_notes:])
+        predicted_pitch = note_model.predict(input)
+        predicted_duration = duration_model.predict(input)
 
-        duration = round(duration) if (((round(duration) % 2) == 0)) else round(duration) + 1
+        predicted_duration = np.argmax(predicted_duration) 
+        durations[predicted_duration] += 1
 
 
-        #duration = round(duration)
-        if duration < 1:
-            duration = 1
-        elif duration > 16:
-            duration = 16
-        duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [duration])
+        if predicted_pitch[-1] == np.max(predicted_pitch):
+            predicted_pitch = 0
+        else:
+            max_args = np.argsort(predicted_pitch)
+            predicted_pitch = max_args[0] + min_note
+            if predicted_pitch == previous_pitch:
+                predicted_pitch = max_args[1] + min_note
+                
+            pitches[predicted_pitch - min_note] += predicted_duration
+            previous_pitch = predicted_pitch
+
+        # Append the encoded predicted pitch and duration to the data to use it as input for the next prediction
+        duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [predicted_duration])
+
         # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
         #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
         #print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
-        idx += duration
+        idx += predicted_duration + 1
         count += 1
     
     return duration_data, count
+
+    #pitches_original = [x/sum(pitches_original) for x in pitches_original]
+    #pitches = [x/sum(pitches) for x in pitches]
+    #for x in pitches_original:
+    #    print(f"{x: .2f} ", end="")
+    #print()
+    #for x in pitches:
+    #    print(f"{x: .2f} ", end="")
+    #print()
+    #return distance.euclidean(pitches_original, pitches)
 
 
 
