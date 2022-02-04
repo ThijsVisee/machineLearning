@@ -93,6 +93,7 @@ if __name__ == '__main__':
     PREDICTION = 24 * 16
 
     write_all_data = True
+    play_audio = True
 
     d = VoiceData('data.txt', True)
 
@@ -127,6 +128,7 @@ if __name__ == '__main__':
 
     print("creating audio file")
 
-    play_all_voices(np.array(allVoices))
+    if(play_audio):
+        play_all_voices(np.array(allVoices))
 
     #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))

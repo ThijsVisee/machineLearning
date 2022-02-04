@@ -130,6 +130,15 @@ if __name__ == '__main__':
 
     voices = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
 
-    #play_all_voices(voices)
+    #voices = []
 
-    create_audio_file(voices)
+    #voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice1.txt'))
+    #voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice2.txt'))
+    #voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice3.txt'))
+    #voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice4.txt'))
+
+    #voices = np.transpose(np.array(voices))
+
+    play_all_voices(voices)
+
+    #create_audio_file(voices)
