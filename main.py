@@ -12,7 +12,6 @@ from play_voices.play_voices import create_audio_file, play_all_voices, play_voi
 
 
 from scipy.spatial import distance
-from tqdm import tqdm
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
