@@ -6,7 +6,7 @@ from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from analysis.validation import *
 from analysis.analysis import get_voice_statistics
-from play_voices.play_voices import play_all_voices, play_voice
+from play_voices.play_voices import create_audio_file, play_all_voices, play_voice
 
 
 def flatten_list(l):
@@ -101,6 +101,8 @@ if __name__ == '__main__':
 
     for vDx, v in enumerate(d.encoded_data):
 
+        print(f'Predicting Voice {vDx+1}')
+
         get_voice_statistics(d.raw_data[vDx])
 
         prediction, predCount = get_prediction(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
@@ -121,6 +123,10 @@ if __name__ == '__main__':
 
         #play_voice(VoiceData.get_voice_from_encoding(prediction))
 
-    play_all_voices(allVoices)
+    create_audio_file(np.array(allVoices))
+
+    print("creating audio file")
+
+    play_all_voices(np.array(allVoices))
 
     #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))

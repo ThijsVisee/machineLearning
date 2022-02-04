@@ -6,9 +6,8 @@ import sounddevice as sd
 import soundfile as sf
 
 '''
-play a single voice
+create a sound vector for a single voice
 '''
-
 # this code is adapted from the matlab file provided for the project
 def get_sound_vector(voice, sampleRate = 10000):
 
@@ -50,15 +49,26 @@ def get_sound_vector(voice, sampleRate = 10000):
 
     return soundvector1
 
-def play_voice(voice, sampleRate = 10000):
+'''
+play a single voice
+'''
+def play_voice(voice, sampleRate = 10000, stopEarly = 0):
 
     sound = get_sound_vector(voice, sampleRate)
 
-    sd.play(sound, sampleRate)
-    time.sleep(50)
-    sd.stop()
+    sound = np.array(sound)
 
-def play_all_voices(data, sampleRate = 10000):
+    sd.play(np.transpose(sound), sampleRate)
+    if(stopEarly != 0):
+        time.sleep(stopEarly)
+        sd.stop()
+    else:
+        sd.wait()
+
+'''
+play all voices
+'''
+def play_all_voices(data, sampleRate = 10000, stopEarly = 0):
 
     durationPerSymbol = 1/16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
@@ -70,14 +80,44 @@ def play_all_voices(data, sampleRate = 10000):
     sound = np.array(sound)
 
     sd.play(np.transpose(sound), sampleRate)
-    time.sleep(90)
-    sd.stop()
+    if(stopEarly != 0):
+        time.sleep(stopEarly)
+        sd.stop()
+    else:
+        sd.wait()
 
-def create_audio_file(voice, sampleRate = 10000):
+
+
+'''
+create an audio file from a single voice
+'''
+def create_audio_file_single_voice(voice, sampleRate = 10000):
 
     sound = get_sound_vector(voice, sampleRate)
 
-    sf.write('file.wav',sound, sampleRate)
+    sound = np.array(sound)
+
+    fName = f'{os.getcwd()}/out/voice{str(voice+1)}.wav'
+
+    sf.write(fName,sound, sampleRate)
+
+'''
+create an audio file with all voices
+'''
+def create_audio_file(data, sampleRate = 10000):
+
+    durationPerSymbol = 1/16
+    ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
+
+    sound = np.zeros(len(data)*ticksPerSymbol)
+    for voice in np.transpose(data):
+        sound = sound + get_sound_vector(voice, sampleRate)
+    
+    sound = np.array(sound)
+
+    fName = f'{os.getcwd()}/out/fugue.wav'
+
+    sf.write(fName, np.transpose(sound), sampleRate)
 
 if __name__ == '__main__':
 
@@ -90,6 +130,6 @@ if __name__ == '__main__':
 
     voices = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
 
-    play_all_voices(voices)
+    #play_all_voices(voices)
 
-    #create_audio_file(voice)
+    create_audio_file(voices)
