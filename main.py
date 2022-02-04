@@ -24,10 +24,8 @@ def neural_network():
     # See TensorFlow version
     print(f"TensorFlow version: {tf.__version__}")
 
-    # filenames = ['voice1', 'voice2', 'voice3', 'voice4']
-    # for idx, filename in enumerate(filenames):
-    idx = 1
-    vd = VoiceData(idx)
+
+    vd = VoiceData()
     df = vd.get_nn_data()
 
     # create train-test-val split
@@ -54,7 +52,7 @@ def neural_network():
     df = predict(df=df, vd=vd, note_model=note_model, duration_model=duration_model)
 
     # write only the predictions to a file
-    write_voice_to_file(df=df, filename=f'voice{idx}')
+    write_voice_to_file(df=df, filename=f'voice')
 
 
 def ridge_regression(d, voice, preceding_notes):

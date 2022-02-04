@@ -13,8 +13,7 @@ class VoiceData:
     __lowest_note = 35
     __highest_note = 74
 
-    def __init__(self, voice):
-        self.voice = voice
+    def __init__(self):
         self.raw_data = []
         self.encoded_data = []
         self.duration_data = []
@@ -82,7 +81,7 @@ class VoiceData:
         :param preceding_notes: the number of preceding notes is one data window
         :return:
         """
-        voice = self.voice
+        voice = 1
         if not self.duration_data:
             self.duration_data = [self.encoded_data[voice][0].copy()]
             self.duration_data[0].append(1)

@@ -105,7 +105,7 @@ def test_performance(df_test, note_model, duration_model):
               f'Error: {round(mean_squared_error(dur_t, dur_p), 1)}')
 
 
-def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot=False):
+def predict(df, vd, note_model, duration_model, num_predictions=50, a=0.1, plot=False):
     """
     This function predicts a given amount of new samples and appends it
     to a copy of the original dataset
