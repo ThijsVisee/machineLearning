@@ -1,4 +1,6 @@
 import math
+import sys
+
 import numpy as np
 import os as os
 import pandas as pd
@@ -11,7 +13,8 @@ class VoiceData:
     __lowest_note = 35
     __highest_note = 74
 
-    def __init__(self):
+    def __init__(self, voice):
+        self.voice = voice
         self.raw_data = []
         self.encoded_data = []
         self.duration_data = []
@@ -68,7 +71,7 @@ class VoiceData:
         x_fifths, y_fifths = VoiceData.__get_x_y(sample, 'fifths')
         return [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
 
-    def get_nn_data(self, p_note=None, p_dur=None, preceding_notes=60):
+    def get_nn_data(self, p_note=None, p_dur=None, preceding_notes=60, remove_last_n_samples=None):
         """
         This function generates the pandas dataframe containing the train/test/val data.
         If p_note is not passed then this function assumes that the data
@@ -79,7 +82,7 @@ class VoiceData:
         :param preceding_notes: the number of preceding notes is one data window
         :return:
         """
-        voice = 1
+        voice = self.voice
         if not self.duration_data:
             self.duration_data = [self.encoded_data[voice][0].copy()]
             self.duration_data[0].append(1)
@@ -102,10 +105,12 @@ class VoiceData:
                     self.duration_data[-1].append(note_vector)
 
             for item in self.duration_data:
+                dur = item[5]
                 duration_vector = [0] * 25
                 index = item[5] if item[5] <= 24 else 0
                 duration_vector[index] = 1
                 item[5] = duration_vector
+                item.append(dur)
 
         if p_note:
             # encode the note and duration as a probability vector
@@ -114,17 +119,23 @@ class VoiceData:
             note_vector[p_note] = 1.0
             duration_vector[p_dur] = 1.0
 
-            v = self.__encode_single_sample(p_note) + [duration_vector] + [note_vector]
+            v = self.__encode_single_sample(p_note) + [duration_vector] + [note_vector] + [p_dur]
             self.duration_data.append(v)
 
         # copy the duration data so as to not disturb its values
         data = self.duration_data.copy()
+        if remove_last_n_samples:
+            data = data[:-remove_last_n_samples]
         data = pd.DataFrame(data)
         data = data.rename(columns={0: 'log pitch', 1: 'chroma x', 2: 'chroma y', 3: 'fifths x',
-                                    4: 'fifths y', 5: 'duration', 6: 'note'})
+                                    4: 'fifths y', 5: 'duration', 6: 'note', 7: 'dur'})
+        data.assign(dur=data['duration'])
         # normalize data
-        subset = ['log pitch', 'chroma x', 'chroma y', 'fifths x', 'fifths y']
+        subset = ['log pitch', 'chroma x', 'chroma y', 'fifths x', 'fifths y', 'dur']
         data[subset] = (data[subset] - data[subset].mean()) / data[subset].std()
+
+        data.to_csv('data.csv')
+
 
         # Window the data
         window_data = {'data': [], 'duration': [], 'note': []}

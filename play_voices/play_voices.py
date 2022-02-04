@@ -6,7 +6,7 @@ import os
 import sounddevice as sd
 
 # F = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
-F = np.loadtxt(f'{os.getcwd()}/../data/generated_voice.txt', usecols=range(1))
+F = np.loadtxt(f'{os.getcwd()}/../data/voice1.txt', usecols=range(1))
 
 
 

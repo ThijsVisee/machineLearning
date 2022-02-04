@@ -58,9 +58,6 @@ def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, labe
         tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=64, activation='relu'),
-        # tf.keras.layers.Dense(units=64, activation='relu'),
-        # tf.keras.layers.Dense(units=128, activation='relu'),
-        # tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=output_shape, activation=activation)
     ])
 
@@ -121,8 +118,9 @@ def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot
     :return: the dataset containing the original samples + the predicted samples
     """
     print(f'PREDICTING {num_predictions} NOTES and DURATIONS:')
+    remove_last_n_samples = 250
     for i in range(num_predictions):
-        last_sample = df['data'].iloc[-1]
+        last_sample = df['data'].iloc[-remove_last_n_samples]
         predicted_note = note_model.predict(np.array([last_sample, ]))[0]
         if plot:
             plot_prediction_dist(predicted_note)
@@ -132,7 +130,7 @@ def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot
         predicted_dur = duration_model.predict(np.array([last_sample, ]))
         predicted_dur = np.argmax(predicted_dur[0])
         print('Predicted note: ', predicted_note, 'Predicted duration: ', predicted_dur)
-        df = vd.get_nn_data(p_note=predicted_note, p_dur=predicted_dur)
+        df = vd.get_nn_data(p_note=predicted_note, p_dur=predicted_dur, remove_last_n_samples=remove_last_n_samples)
     return df
 
 
