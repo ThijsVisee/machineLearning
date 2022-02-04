@@ -1,15 +1,15 @@
 import numpy as np
 import tensorflow as tf
 import os
-from analysis.visualization import visualize_single_voice
+from analysis.visualization import plot_single_voice
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from model.neural_net import test_performance, predict, write_voice_to_file, nn_model
 from analysis.validation import *
 from analysis.analysis import get_voice_statistics
-from play_voices.play_voices import create_audio_file, play_all_voices, play_voice
-
+from analysis.visualization import plot_single_voice
+from play_voices.play_voices import create_audio_file, play_all_voices
 
 from scipy.spatial import distance
 
@@ -88,8 +88,8 @@ def ridge_regression(d, voice, preceding_notes, pred):
         pitches_original[note - min_note] += 1
     
     pitches_dur = [0] * (max_note - min_note + 2)
-    for dur_note in duration_data:
-        pitches
+    #for dur_note in duration_data:
+        #pitches
 
     X = []
     y_note = []
@@ -144,7 +144,7 @@ def ridge_regression(d, voice, preceding_notes, pred):
             previous_pitch = predicted_pitch
 
         # Append the encoded predicted pitch and duration to the data to use it as input for the next prediction
-        duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [predicted_duration])
+        duration_data.append(VoiceData.encode_single_pitch(predicted_pitch) + [predicted_duration])
 
         # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
         #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     PREDICTION = 24 * 16
 
     write_all_data = True
-    play_audio = True
+    play_audio = False
 
     d = VoiceData('data.txt', True)
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
         prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
 
-        neural_network()
+        #neural_network()
 
         prediction = np.array(prediction)
 
@@ -201,14 +201,14 @@ if __name__ == '__main__':
         else:
             write_to_file(prediction[-predCount:], vDx)
 
-        visualize_single_voice(prediction, vDx)
+        plot_single_voice(prediction, vDx, True)
 
         allPred.append(prediction)
         allVoices.append(VoiceData.get_voice_from_encoding(prediction))
 
         #play_voice(VoiceData.get_voice_from_encoding(prediction))
 
-    create_audio_file(np.array(allVoices))
+    #create_audio_file(np.array(allVoices))
 
     print("creating audio file")
 
