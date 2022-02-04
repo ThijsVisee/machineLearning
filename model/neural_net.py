@@ -1,6 +1,5 @@
 import os
 import random
-import sys
 import time
 
 import numpy as np
@@ -9,7 +8,6 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 from os.path import exists
 import heapq
-import keras.backend as K
 
 
 def compile_and_fit(model, df_train, df_val, label, loss, patience=12):
@@ -43,16 +41,6 @@ def compile_and_fit(model, df_train, df_val, label, loss, patience=12):
     return model
 
 
-def custom_loss(y_true, y_pred):
-    loss = K.abs(y_pred-y_true)
-    loss = K.log(loss)
-    # p = [abs(p[i] - p[i]) for i in range(len(p))]
-    # calculate loss, using y_pred
-    # loss = (1/len(p))  tf.math.cumsum(tf.math.log(p))
-    # loss = 1/len(p) * sum(tf.math.log(p))
-    return loss
-
-
 def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, label):
     """
     this function builds a tensorflow model
@@ -67,10 +55,12 @@ def nn_model(df_train, df_val, input_shape, output_shape, activation, loss, labe
     """
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(units=input_shape, activation='relu'),
+        tf.keras.layers.Dense(units=128, activation='relu'),
+        tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=64, activation='relu'),
-        tf.keras.layers.Dense(units=128, activation='relu'),
-        tf.keras.layers.Dense(units=128, activation='relu'),
         # tf.keras.layers.Dense(units=64, activation='relu'),
+        # tf.keras.layers.Dense(units=128, activation='relu'),
+        # tf.keras.layers.Dense(units=128, activation='relu'),
         tf.keras.layers.Dense(units=output_shape, activation=activation)
     ])
 
