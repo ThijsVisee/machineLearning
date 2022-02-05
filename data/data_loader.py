@@ -23,6 +23,9 @@ class VoiceData:
         self.__load_voices(include_zeroes)
         self.__encode_pitch()
 
+    def remove_last_samples(self, num_samples):
+        self.duration_data = self.duration_data[:-num_samples]
+
     def __load_voices(self, include_zeroes=False):
         """
         Loads the voices from a txt file
@@ -71,12 +74,13 @@ class VoiceData:
         x_fifths, y_fifths = VoiceData.__get_x_y(sample, 'fifths')
         return [log_abs_pitch, x_chroma, y_chroma, x_fifths, y_fifths]
 
-    def get_nn_data(self, voice, p_note=None, p_dur=None, preceding_notes=60, remove_last_n_samples=None):
+    def get_nn_data(self, voice=0, p_note=None, p_dur=None, preceding_notes=120):
         """
         This function generates the pandas dataframe containing the train/test/val data.
         If p_note is not passed then this function assumes that the data
         is generated for the first time. If p_note is passed, it is converted to the
         appropriate format and appended to the data. Same for p_dur.
+        :param voice: the selected voice
         :param p_note: predicted note
         :param p_dur: predicted duration
         :param preceding_notes: the number of preceding notes is one data window
@@ -123,8 +127,6 @@ class VoiceData:
 
         # copy the duration data so as to not disturb its values
         data = self.duration_data.copy()
-        if remove_last_n_samples:
-            data = data[:-remove_last_n_samples]
         data = pd.DataFrame(data)
         data = data.rename(columns={0: 'log pitch', 1: 'chroma x', 2: 'chroma y', 3: 'fifths x',
                                     4: 'fifths y', 5: 'duration', 6: 'note', 7: 'dur'})
@@ -132,9 +134,6 @@ class VoiceData:
         # normalize data
         subset = ['log pitch', 'chroma x', 'chroma y', 'fifths x', 'fifths y', 'dur']
         data[subset] = (data[subset] - data[subset].mean()) / data[subset].std()
-
-        data.to_csv('data.csv')
-
 
         # Window the data
         window_data = {'data': [], 'duration': [], 'note': []}

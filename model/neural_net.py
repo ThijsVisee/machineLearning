@@ -119,19 +119,21 @@ def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.1, plot
     :return: the dataset containing the original samples + the predicted samples
     """
     print(f'PREDICTING {num_predictions} NOTES and DURATIONS:')
-    remove_last_n_samples = 250
+    remove_last_n_samples = 0
+    vd.remove_last_samples(remove_last_n_samples)
     for i in range(num_predictions):
-        last_sample = df['data'].iloc[-remove_last_n_samples]
+        last_sample = df['data'].iloc[-1]
         predicted_note = note_model.predict(np.array([last_sample, ]))[0]
         if plot:
             plot_prediction_dist(predicted_note)
         # select the highest predicted note with 90% chance, else second highest
         predicted_note = heapq.nlargest(2, range(len(predicted_note)), key=predicted_note.__getitem__)
         predicted_note = predicted_note[0] if random.random() > a else predicted_note[1]
-        predicted_dur = duration_model.predict(np.array([last_sample, ]))
-        predicted_dur = np.argmax(predicted_dur[0])
+        predicted_dur = duration_model.predict(np.array([last_sample, ]))[0]
+        predicted_dur = heapq.nlargest(2, range(len(predicted_dur)), key=predicted_dur.__getitem__)
+        predicted_dur = predicted_dur[0] if random.random() > a else predicted_dur[1]
         print('Predicted note: ', predicted_note, 'Predicted duration: ', predicted_dur)
-        df = vd.get_nn_data(p_note=predicted_note, p_dur=predicted_dur, remove_last_n_samples=remove_last_n_samples)
+        df = vd.get_nn_data(p_note=predicted_note, p_dur=predicted_dur)
     return df
 
 
@@ -153,21 +155,23 @@ def write_voice_to_file(df, filename='generated_voice'):
     :param filename: the name the generated file should have
     """
     txt = []
+    voice = []
     for index, row in df.tail(100).iterrows():
         dur = int(np.argmax(row['duration']))
+        print(int(np.argmax(row['note'])))
         for i in range(dur):
             txt.append(str(int(np.argmax(row['note']))))
+            voice.append(int(np.argmax(row['note'])))
     textfile = open(f'data{os.sep}{filename}.txt', "w")
     for element in txt:
         textfile.write(element + '\n')
     textfile.close()
     print(f'Voice has been written to {filename}.txt')
+    return voice
 
 
-def write_4_voices_to_file(filename = 'generated_voices'):
+def write_4_voices_to_file(filename='generated_voices'):
     F = np.loadtxt(f'{os.getcwd()}/data/generated_voice.txt', usecols=range(1))
-
-
     voice_1 = np.loadtxt(f'{os.getcwd()}/predictions/voice1.txt', usecols=range(1))
     voice_2 = np.loadtxt(f'{os.getcwd()}/predictions/voice2.txt', usecols=range(1))
     voice_3 = np.loadtxt(f'{os.getcwd()}/predictions/voice3.txt', usecols=range(1))
@@ -176,12 +180,8 @@ def write_4_voices_to_file(filename = 'generated_voices'):
     textfile = open(f'data{os.sep}{filename}.txt', "w")
     i = 0
     for n in voice_4:
-        textfile.write(str(int(voice_1[i])) + ' ' + str(int(voice_2[i])) + ' ' + str(int(voice_3[i])) + ' ' + str(int(voice_4[i]))+ '\n')
+        textfile.write(str(int(voice_1[i])) + ' ' + str(int(voice_2[i])) + ' ' + str(int(voice_3[i])) + ' ' + str(
+            int(voice_4[i])) + '\n')
         i = i + 1
 
     textfile.close()
-
-
-
-
-
