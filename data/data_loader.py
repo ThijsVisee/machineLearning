@@ -12,7 +12,8 @@ class VoiceData:
     __lowest_note = 35
     __highest_note = 74
     
-    def __init__(self):
+    def __init__(self, voice = 0):
+        self.voice = voice
         self.raw_data = []
         self.encoded_data = []
         self.data_path = f'{os.path.split(__file__)[0]}{os.sep}data.txt'
@@ -23,7 +24,7 @@ class VoiceData:
 
     def __load_voices(self, include_zeroes=False):
         raw_data = np.loadtxt(self.data_path, dtype=int)
-        raw_data = np.array([element for element in raw_data if element[0] != 0])
+        raw_data = np.array([element for element in raw_data if element[self.voice] != 0])
         samples, voices = raw_data.shape
         self.raw_data = np.array([raw_data[:, i] for i in range(voices)])
         print("Raw Data Loaded Successfully!")

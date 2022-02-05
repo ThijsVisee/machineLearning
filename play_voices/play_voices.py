@@ -10,7 +10,7 @@ import sounddevice as sd
 # chosenVoice = 0
 # voice = F[:, chosenVoice]
 
-voice = np.loadtxt(f'{os.getcwd()}/../out/prediction.txt')
+voice = np.loadtxt(f'{os.path.split(__file__)[0]}/../out/prediction.txt')
 
 symbolicLength = len(voice)
 baseFreq = 440
@@ -18,14 +18,13 @@ sampleRate = 10000
 durationPerSymbol = 1/16
 ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
 
-soundvector1 = np.zeros(symbolicLength*ticksPerSymbol)
+soundvector1 = np.zeros(10*symbolicLength*ticksPerSymbol)
 currentSymbol = voice[0]
 
 startSymbolIndex = 1
 x = 1
 for n in voice:
     if not n == currentSymbol:
-
         stopSymbolIndex = x
         t1 = (startSymbolIndex - 1) * ticksPerSymbol + 1
         t2 = stopSymbolIndex * ticksPerSymbol
@@ -40,6 +39,7 @@ for n in voice:
         while y < toneLength:
             toneVector[y] = math.sin(2 * math.pi * frequency * y / sampleRate)
             y = y + 1
+            
         z = 0
         while z < len(coveredSoundVectorIndices):
             c = int(coveredSoundVectorIndices[z])
@@ -50,7 +50,7 @@ for n in voice:
     x = x + 1
 
 sd.play(soundvector1, 10000)
-time.sleep(50)
+time.sleep(500)
 sd.stop()
 
 
