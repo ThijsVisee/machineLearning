@@ -66,7 +66,7 @@ def neural_network():
                           activation='softmax', loss='categorical_crossentropy', label='note')
 
     duration_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_duration,
-                              activation=None, loss='categorical_crossentropy', label='duration')
+                              activation='softmax', loss='categorical_crossentropy', label='duration')
 
     # test the performance of the model on the test set
     test_performance(df_test=test_df, note_model=note_model, duration_model=duration_model)
