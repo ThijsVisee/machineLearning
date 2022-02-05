@@ -10,7 +10,7 @@ import sounddevice as sd
 # chosenVoice = 0
 # voice = F[:, chosenVoice]
 
-voice = np.loadtxt(f'{os.getcwd()}/../data/voice.txt')
+voice = np.loadtxt(f'{os.getcwd()}/../data/voice1.txt')
 
 symbolicLength = len(voice)
 baseFreq = 440
