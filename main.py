@@ -1,15 +1,15 @@
 import numpy as np
 import tensorflow as tf
 import os
-# from analysis.visualization import visualize_single_voice
+from analysis.visualization import plot_single_voice
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from model.neural_net import test_performance, predict, write_voice_to_file, nn_model
 from analysis.validation import *
 from analysis.analysis import get_voice_statistics
-from play_voices.play_voices import create_audio_file, play_all_voices, play_voice
-
+from analysis.visualization import plot_single_voice
+from play_voices.play_voices import create_audio_file, play_all_voices
 
 from scipy.spatial import distance
 
@@ -63,10 +63,10 @@ def neural_network():
     output_shape_duration = len(train_df['duration'][0])
 
     note_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_note,
-                          activation='softmax', loss='categorical_crossentropy', label='note')
+                          activation='softmax', loss='mean_squared_error', label='note')
 
     duration_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_duration,
-                              activation='softmax', loss='categorical_crossentropy', label='duration')
+                              activation=None, loss='mean_squared_error', label='duration')
 
     # test the performance of the model on the test set
     test_performance(df_test=test_df, note_model=note_model, duration_model=duration_model)
@@ -88,8 +88,8 @@ def ridge_regression(d, voice, preceding_notes, pred):
         pitches_original[note - min_note] += 1
     
     pitches_dur = [0] * (max_note - min_note + 2)
-    for dur_note in duration_data:
-        pitches
+    #for dur_note in duration_data:
+        #pitches
 
     X = []
     y_note = []
@@ -144,7 +144,7 @@ def ridge_regression(d, voice, preceding_notes, pred):
             previous_pitch = predicted_pitch
 
         # Append the encoded predicted pitch and duration to the data to use it as input for the next prediction
-        duration_data.append(VoiceData.encode_from_absolute_pitch(predicted_pitch) + [predicted_duration])
+        duration_data.append(VoiceData.encode_single_pitch(predicted_pitch) + [predicted_duration])
 
         # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
         #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
@@ -174,46 +174,45 @@ if __name__ == '__main__':
     INCLUDED_PRECEDING_STEPS = 12 * 16
     PREDICTION = 24 * 16
 
-    neural_network()
-    # write_all_data = True
-    # play_audio = True
-    #
-    # d = VoiceData('data.txt', True)
-    #
-    # allPred = []
-    # allVoices = []
-    #
-    # for vDx, v in enumerate(d.encoded_data):
-    #
-    #     print(f'Predicting Voice {vDx+1}')
-    #
-    #     get_voice_statistics(d.raw_data[vDx])
-    #
-    #     prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
-    #
-    #     neural_network()
-    #
-    #     prediction = np.array(prediction)
-    #
-    #     get_voice_statistics(prediction)
-    #
-    #     if(write_all_data):
-    #         write_to_file(prediction, vDx)
-    #     else:
-    #         write_to_file(prediction[-predCount:], vDx)
-    #
-    #     visualize_single_voice(prediction, vDx)
-    #
-    #     allPred.append(prediction)
-    #     allVoices.append(VoiceData.get_voice_from_encoding(prediction))
-    #
-    #     #play_voice(VoiceData.get_voice_from_encoding(prediction))
-    #
-    # create_audio_file(np.array(allVoices))
-    #
-    # print("creating audio file")
-    #
-    # if(play_audio):
-    #     play_all_voices(np.array(allVoices))
-    #
-    # #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))
+    write_all_data = True
+    play_audio = False
+
+    d = VoiceData('data.txt', True)
+
+    allPred = []
+    allVoices = []
+
+    for vDx, v in enumerate(d.encoded_data):
+
+        print(f'Predicting Voice {vDx+1}')
+
+        get_voice_statistics(d.raw_data[vDx])
+
+        prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
+
+        #neural_network()
+
+        prediction = np.array(prediction)
+
+        get_voice_statistics(prediction)
+
+        if(write_all_data):
+            write_to_file(prediction, vDx)
+        else:
+            write_to_file(prediction[-predCount:], vDx)
+
+        plot_single_voice(prediction, vDx, True)
+
+        allPred.append(prediction)
+        allVoices.append(VoiceData.get_voice_from_encoding(prediction))
+
+        #play_voice(VoiceData.get_voice_from_encoding(prediction))
+
+    #create_audio_file(np.array(allVoices))
+
+    print("creating audio file")
+
+    if(play_audio):
+        play_all_voices(np.array(allVoices))
+
+    #print(msle(prediction[-predCount:,0],prediction[:predCount,0]))
