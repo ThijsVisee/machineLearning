@@ -78,7 +78,7 @@ def neural_network():
     write_voice_to_file(df=df, filename=f'voice{idx}')
 
 
-def ridge_regression(d, voice, preceding_notes, pred):
+def ridge_regression(d, voice, preceding_notes, pred, ridge_alpha = 0.005):
     raw_data = d.raw_data[voice]
     duration_data = d.get_duration_data(voice)
     min_note, max_note = d.get_min_max_voice_value(voice)
@@ -86,10 +86,6 @@ def ridge_regression(d, voice, preceding_notes, pred):
     pitches_original = [0] * (max_note - min_note + 2)
     for note in raw_data:
         pitches_original[note - min_note] += 1
-    
-    pitches_dur = [0] * (max_note - min_note + 2)
-    #for dur_note in duration_data:
-        #pitches
 
     X = []
     y_note = []
@@ -110,8 +106,8 @@ def ridge_regression(d, voice, preceding_notes, pred):
     y_note = np.array(y_note)
 
     # Train the linear regression model
-    note_model = LinearRegression(X, y_note, ridge_alpha=0.005)
-    duration_model = LinearRegression(X, y_duration, ridge_alpha=0.005)
+    note_model = LinearRegression(X, y_note, ridge_alpha)
+    duration_model = LinearRegression(X, y_duration, ridge_alpha)
 
     previous_pitch = -1
     durations = [0] * 16
@@ -128,9 +124,12 @@ def ridge_regression(d, voice, preceding_notes, pred):
         predicted_pitch = note_model.predict(input)
         predicted_duration = duration_model.predict(input)
 
-        predicted_duration = np.argmax(predicted_duration) 
-        durations[predicted_duration] += 1
+        predicted_duration = np.argmax(predicted_duration)+1
+        durations[predicted_duration-1] += 1
 
+        #trim the last value to recieve the same length for all voices
+        if idx + predicted_duration > pred:
+            predicted_duration = pred-idx
 
         if predicted_pitch[-1] == np.max(predicted_pitch):
             predicted_pitch = 0
@@ -149,7 +148,7 @@ def ridge_regression(d, voice, preceding_notes, pred):
         # print("test", VoiceData.encode_from_absolute_pitch(round(predicted_pitch)) + [duration])
         #print(duration_data[-1], VoiceData.get_pitch_from_absolute(duration_data[-1][0]))
         #print(VoiceData.get_pitch_from_absolute(predicted_pitch), duration)
-        idx += predicted_duration + 1
+        idx += predicted_duration
         count += 1
     
     return duration_data, count
@@ -165,28 +164,67 @@ def ridge_regression(d, voice, preceding_notes, pred):
     #return distance.euclidean(pitches_original, pitches)
 
 
+def determine_preceding_steps(d, predLength):
+    preceding_steps = np.arange(1,51,1)
+
+    all_errors = []
+    all_euclidean = []
+    for step in preceding_steps:
+
+        eucDistance = 0
+        msle_error = 0
+
+        for vDx, v in enumerate(d.encoded_data):
+
+            prediction, predCount = ridge_regression(d, vDx, step * 16, predLength)
+
+            prediction = np.array(prediction)
+
+            orig_prob_vec = get_prob_vec(prediction[:-predCount])
+            pred_prob_vec = get_prob_vec(prediction[-predCount:])
+
+            # we can reasonably assume that the error will only be 0 after the initialization
+            eucDistance = distance.euclidean(orig_prob_vec, pred_prob_vec) if eucDistance == 0 else (eucDistance + distance.euclidean(orig_prob_vec, pred_prob_vec))/2
+            msle_error = msle(pred_prob_vec,orig_prob_vec) if msle_error == 0 else (eucDistance + msle(pred_prob_vec,orig_prob_vec))/2
+
+        print(f"MSLE: {msle_error}")
+        print(f"Euclidean Distance: {eucDistance}")
+        print('')
+        all_errors.append(msle_error)
+        all_euclidean.append(eucDistance)
+
+    print(f"Best MSLE: {np.argmin(all_errors)+1}")
+    print(f"Best Euclidean Distance: {np.argmin(all_euclidean)+1}")
+
+
+    return np.argmin(all_errors)+1
+
 
 if __name__ == '__main__':
 
     VOICE = 1
 
-    # values below are multiplied by 16 to get the actual number of notes from bars
-    INCLUDED_PRECEDING_STEPS = 12 * 16
-    PREDICTION = 24 * 16
+    PREDICTION = 96 * 16
 
     write_all_data = True
     play_audio = False
 
     d = VoiceData('data.txt', True)
 
+     # values below are multiplied by 16 to get the actual number of notes from bars
+    INCLUDED_PRECEDING_STEPS = determine_preceding_steps(d, PREDICTION) * 16
+    #INCLUDED_PRECEDING_STEPS = 12 * 16
+
     allPred = []
     allVoices = []
+    eucDistance = 0
+    msle_error = 0
 
     for vDx, v in enumerate(d.encoded_data):
 
         print(f'Predicting Voice {vDx+1}')
 
-        get_voice_statistics(d.raw_data[vDx])
+        #get_voice_statistics(d.raw_data[vDx])
 
         prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
 
@@ -194,21 +232,31 @@ if __name__ == '__main__':
 
         prediction = np.array(prediction)
 
-        get_voice_statistics(prediction)
+        #get_voice_statistics(prediction)
 
         if(write_all_data):
             write_to_file(prediction, vDx)
         else:
             write_to_file(prediction[-predCount:], vDx)
 
-        plot_single_voice(prediction, vDx, True)
+        #plot_single_voice(prediction, vDx, True)
+
+        orig_prob_vec = get_prob_vec(prediction[:-predCount])
+        pred_prob_vec = get_prob_vec(prediction[-predCount:])
+
+        # we can reasonably assume that the error will only be 0 after the initialization
+        eucDistance = distance.euclidean(orig_prob_vec, pred_prob_vec) if eucDistance == 0 else (eucDistance + distance.euclidean(orig_prob_vec, pred_prob_vec))/2
+        msle_error = msle(pred_prob_vec,orig_prob_vec) if msle_error == 0 else (eucDistance + msle(pred_prob_vec,orig_prob_vec))/2
 
         allPred.append(prediction)
         allVoices.append(VoiceData.get_voice_from_encoding(prediction))
 
         #play_voice(VoiceData.get_voice_from_encoding(prediction))
 
-    #create_audio_file(np.array(allVoices))
+    print(f"MSLE: {msle_error}")
+    print(f"Euclidean Distance: {eucDistance}")
+
+    create_audio_file(np.array(allVoices, dtype='float64'))
 
     print("creating audio file")
 
