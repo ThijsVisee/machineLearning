@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import os
-from analysis.visualization import plot_single_voice
+from analysis.visualization import boxplot, plot_all_voices, plot_single_voice
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
@@ -184,29 +184,35 @@ if __name__ == '__main__':
 
     for vDx, v in enumerate(d.encoded_data):
 
-        print(f'Predicting Voice {vDx+1}')
+        print('###########')
 
-        get_voice_statistics(d.raw_data[vDx])
+        get_voice_statistics(d.raw_data[vDx],False)
 
         prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
+
+        print(f'Predicting Voice {vDx+1}')
 
         #neural_network()
 
         prediction = np.array(prediction)
 
-        get_voice_statistics(prediction)
+        get_voice_statistics(prediction, False)
 
         if(write_all_data):
             write_to_file(prediction, vDx)
         else:
             write_to_file(prediction[-predCount:], vDx)
 
-        plot_single_voice(prediction, vDx, True)
+        plot_single_voice(prediction[:-predCount], vDx, False)
 
-        allPred.append(prediction)
+        allPred.append(prediction[:-predCount])
         allVoices.append(VoiceData.get_voice_from_encoding(prediction))
 
         #play_voice(VoiceData.get_voice_from_encoding(prediction))
+    
+    plot_all_voices(allPred, False)
+
+    boxplot(allPred, True)
 
     #create_audio_file(np.array(allVoices))
 

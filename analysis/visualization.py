@@ -30,9 +30,14 @@ def plot_single_voice(voice, vIdx, centered = True):
 
         fname = f'{PLOTDIR}/voice{vIdx+1}_centered.png'
 
-    plt.figure()
+    plt.figure(figsize=(14.4, 4.8))
     plt.plot(arr)
+
+    plt.xlabel("Time Steps")
+    plt.ylabel("Piano Key Index")
+
     plt.savefig(fname, format='png', dpi=600, transparent=True)
+    plt.close()
 
 
 '''
@@ -42,7 +47,7 @@ def plot_all_voices(data, centered = True):
 
     check_dir_exists(PLOTDIR)
 
-    plt.figure()
+    plt.figure(figsize=(14.4, 4.8))
 
     fname = f'{PLOTDIR}/all_voices.png'
 
@@ -65,6 +70,47 @@ def plot_all_voices(data, centered = True):
                         val[...] = mean
     
         plt.plot(arr)
+    
+    plt.xlabel("Time Steps")
+    plt.ylabel("Piano Key Index")
+    plt.legend(["Voice 1","Voice 2","Voice 3","Voice 4"])  
+
+    plt.savefig(fname, format='png', dpi=600, transparent=True)
+
+    plt.close()
+
+
+def boxplot(data, centered = True):
+
+    plots = []
+
+    fname = f'{PLOTDIR}/boxplot.png'
+
+    for d in data:
+        arr = d
+        if(isinstance(d[0], (list, np.ndarray))):
+            arr = VoiceData.get_voice_from_encoding(d)
+        
+        if(centered):
+            mean = np.mean(arr)
+            
+            with np.nditer(arr, op_flags=['readwrite']) as it:
+                for val in it:
+                    if val == 0:
+                        val[...] = mean
+
+            fname = f'{PLOTDIR}/boxplot_centered.png'
+
+        plots.append(arr)
+
+    check_dir_exists(PLOTDIR)
+
+    plt.figure()
+
+    plt.boxplot(plots)
+
+    plt.xlabel("Voices")
+    plt.ylabel("Piano Key Index")
 
     plt.savefig(fname, format='png', dpi=600, transparent=True)
 
