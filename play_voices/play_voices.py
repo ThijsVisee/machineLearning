@@ -78,10 +78,12 @@ def play_all_voices(data, sampleRate=10000, stopEarly=0):
     durationPerSymbol = 1 / 16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
 
-    sound = np.zeros(len(data) * ticksPerSymbol)
-    for voice in np.transpose(data):
+    sounds = np.transpose(data.copy())
+    sound = np.zeros(len(sounds) * ticksPerSymbol)
+    for voice in data:
         sound = sound + get_sound_vector(voice, sampleRate)
 
+    sound = sound/len(data)
     sound = np.array(sound)
 
     sd.play(np.transpose(sound), sampleRate)
@@ -116,10 +118,12 @@ def create_audio_file(data, sampleRate=10000):
     durationPerSymbol = 1 / 16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
 
-    sound = np.zeros(len(data) * ticksPerSymbol)
-    for voice in np.transpose(data):
+    sounds = np.transpose(data.copy())
+    sound = np.zeros(len(sounds) * ticksPerSymbol)
+    for voice in data:
         sound = sound + get_sound_vector(voice, sampleRate)
 
+    sound = sound/len(data)
     sound = np.array(sound)
 
     fName = f'{os.getcwd()}/out/fugue.wav'
@@ -148,4 +152,4 @@ if __name__ == '__main__':
 
     play_all_voices(voices)
 
-    # create_audio_file(voices)
+    #create_audio_file(np.transpose(voices))
