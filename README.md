@@ -20,7 +20,7 @@
 
 ### **Data**
 
-The data format consits of 4 voices, each encoding the music score as a sequence of integers which represent pitch. The
+The data format consists of 4 voices, each encoding the music score as a sequence of integers which represent pitch. The
 file data.txt represents each of the 4 voices as a (long, column) vector made from 0's and piano key indices. A typical
 part of a voice vector looks like:
 
