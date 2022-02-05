@@ -25,7 +25,7 @@ class LinearRegression:
 
         inverse = np.linalg.inv(X @ X.T + self.ridge_alpha * np.identity(X.shape[0]))
         inv_times_XT = inverse @ X
-        return inv_times_XT @ y
+        return inv_times_XT.T @ y
 
 
 if __name__ == "__main__":

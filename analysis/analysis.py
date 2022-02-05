@@ -16,12 +16,12 @@ def get_voice_statistics(voice, include_zeroes = True, silent = False):
         arr = arr[np.nonzero(arr)]
 
     stats['mean'] = np.mean(arr)
-    stats['var'] = np.var(arr)
+    stats['std'] = np.std(arr)
     stats['max'] = np.amax(arr)
     stats['min'] = np.amin(arr)
 
     if(not silent):
-        print(f"Mean: {stats['mean']}; Variance: {stats['var']}; Min: {stats['min']}; Max: {stats['max']}")
+        print(f"Mean: {stats['mean']}; Standard Deviation: {stats['std']}; Min: {stats['min']}; Max: {stats['max']}")
 
     return stats
 
