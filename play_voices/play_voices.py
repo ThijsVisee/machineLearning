@@ -20,8 +20,8 @@ def get_sound_vector(voice, sampleRate=10000):
     soundvector1 = np.zeros(symbolicLength * ticksPerSymbol)
     currentSymbol = voice[0]
 
-    startSymbolIndex = 1
-    x = 1
+    startSymbolIndex = 0
+    x = 0
     for n in voice:
         if not n == currentSymbol:
 
@@ -32,21 +32,21 @@ def get_sound_vector(voice, sampleRate=10000):
 
             coveredSoundVectorIndices = np.linspace(int(t1), int(t2), num=int(t3))
             toneLength = len(coveredSoundVectorIndices)
-            frequency = baseFreq * 2 ** ((currentSymbol - 69) / 12)
+            frequency = baseFreq * 2 ** ((currentSymbol - 49) / 12)
             toneVector = np.zeros(toneLength)
 
             y = 0
             while y < toneLength:
                 toneVector[y] = math.sin(2 * math.pi * frequency * y / sampleRate)
-                y = y + 1
+                y += 1
             z = 0
             while z < len(coveredSoundVectorIndices):
                 c = int(coveredSoundVectorIndices[z])
                 soundvector1[c] = toneVector[z]
-                z = z + 1
+                z += 1
             currentSymbol = n
             startSymbolIndex = x
-        x = x + 1
+        x += 1
 
     return soundvector1
 
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     # voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice3.txt'))
     # voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice4.txt'))
 
-    # voices = np.transpose(np.array(voices))
+    voices = np.transpose(np.array(voices))
 
     play_all_voices(voices)
 
