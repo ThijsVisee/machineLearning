@@ -18,6 +18,7 @@ class VoiceData:
         self.encoded_data = []
         self.duration_data = []
         self.data_path = f'{os.path.split(__file__)[0]}{os.sep}data.txt'
+        self.removed = False
         self.__lowest_note = 35
         self.__highest_note = 74
         self.__load_voices()
@@ -81,7 +82,7 @@ class VoiceData:
         :param preceding_notes: the number of preceding notes is one data window
         :return:
         """
-        voice = 1
+        voice = 0
         if not self.duration_data:
             self.duration_data = [self.encoded_data[voice][0].copy()]
             self.duration_data[0].append(1)
@@ -123,8 +124,10 @@ class VoiceData:
 
         # copy the duration data so as to not disturb its values
         data = self.duration_data.copy()
-        if remove_last_n_samples:
+        if remove_last_n_samples and not self.removed:
             data = data[:-remove_last_n_samples]
+            self.removed = True
+            print('fuck you')
         data = pd.DataFrame(data)
         data = data.rename(columns={0: 'log pitch', 1: 'chroma x', 2: 'chroma y', 3: 'fifths x',
                                     4: 'fifths y', 5: 'duration', 6: 'note', 7: 'dur'})

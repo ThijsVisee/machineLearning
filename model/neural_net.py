@@ -105,7 +105,7 @@ def test_performance(df_test, note_model, duration_model):
               f'Error: {round(mean_squared_error(dur_t, dur_p), 1)}')
 
 
-def predict(df, vd, note_model, duration_model, num_predictions=50, a=0.1, plot=False):
+def predict(df, vd, note_model, duration_model, num_predictions=100, a=0.0, plot=False):
     """
     This function predicts a given amount of new samples and appends it
     to a copy of the original dataset
@@ -120,6 +120,7 @@ def predict(df, vd, note_model, duration_model, num_predictions=50, a=0.1, plot=
     """
     print(f'PREDICTING {num_predictions} NOTES and DURATIONS:')
     remove_last_n_samples = 250
+    predictions = []
     for i in range(num_predictions):
         last_sample = df['data'].iloc[-remove_last_n_samples]
         predicted_note = note_model.predict(np.array([last_sample, ]))[0]
@@ -130,8 +131,11 @@ def predict(df, vd, note_model, duration_model, num_predictions=50, a=0.1, plot=
         predicted_note = predicted_note[0] if random.random() > a else predicted_note[1]
         predicted_dur = duration_model.predict(np.array([last_sample, ]))
         predicted_dur = np.argmax(predicted_dur[0])
+        for dur in range(predicted_dur):
+            predictions.append(predicted_note)
         print('Predicted note: ', predicted_note, 'Predicted duration: ', predicted_dur)
         df = vd.get_nn_data(p_note=predicted_note, p_dur=predicted_dur, remove_last_n_samples=remove_last_n_samples)
+    write_to_file(predictions)
     return df
 
 
@@ -157,6 +161,22 @@ def write_voice_to_file(df, filename='generated_voice'):
         dur = int(np.argmax(row['duration']))
         for i in range(dur):
             txt.append(str(int(np.argmax(row['note']))))
+    textfile = open(f'data{os.sep}{filename}.txt', "w")
+    for element in txt:
+        textfile.write(element + '\n')
+    textfile.close()
+    print(f'Voice has been written to {filename}.txt')
+
+
+def write_to_file(predictions, filename='generated_voice'):
+    """
+    This function writes the (last 100) predictions to a txt file
+    :param df: the dataset containing the original samples + the predicted samples
+    :param filename: the name the generated file should have
+    """
+    txt = []
+    for prediction in predictions:
+        txt.append(str(prediction))
     textfile = open(f'data{os.sep}{filename}.txt', "w")
     for element in txt:
         textfile.write(element + '\n')

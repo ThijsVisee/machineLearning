@@ -40,10 +40,10 @@ def neural_network():
     output_shape_duration = len(train_df['duration'][0])
 
     note_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_note,
-                          activation='softmax', loss='mean_squared_error', label='note')
+                          activation='softmax', loss='categorical_crossentropy', label='note')
 
     duration_model = nn_model(df_train=train_df, df_val=val_df, input_shape=input_shape, output_shape=output_shape_duration,
-                              activation=None, loss='mean_squared_error', label='duration')
+                              activation='softmax', loss='categorical_crossentropy', label='duration')
 
     # test the performance of the model on the test set
     test_performance(df_test=test_df, note_model=note_model, duration_model=duration_model)

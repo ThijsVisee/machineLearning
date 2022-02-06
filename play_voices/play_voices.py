@@ -5,19 +5,19 @@ from playsound import playsound
 import os
 import sounddevice as sd
 
-def create_soundvector(F, chosenvoice):
 
-    voice = F[:, chosenvoice]
-    print(len(voice))
-    #voice = F
+def create_soundvector(F, chosenvoice):
+    # voice = F[:, chosenvoice]
+    # print(len(voice))
+    voice = F
 
     symbolicLength = len(voice)
     baseFreq = 440
     sampleRate = 10000
-    durationPerSymbol = 1/16
+    durationPerSymbol = 1 / 16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
 
-    soundvector1 = np.zeros(symbolicLength*ticksPerSymbol * 10)
+    soundvector1 = np.zeros(symbolicLength * ticksPerSymbol * 10)
     currentSymbol = voice[0]
 
     startSymbolIndex = 1
@@ -30,9 +30,9 @@ def create_soundvector(F, chosenvoice):
             t2 = stopSymbolIndex * ticksPerSymbol
             t3 = t2 - t1
 
-            coveredSoundVectorIndices = np.linspace(int(t1), int(t2), num = int(t3))
+            coveredSoundVectorIndices = np.linspace(int(t1), int(t2), num=int(t3))
             toneLength = len(coveredSoundVectorIndices)
-            frequency = baseFreq * 2 ** ((currentSymbol-69)/12)
+            frequency = baseFreq * 2 ** ((currentSymbol - 69) / 12)
             toneVector = np.zeros(toneLength)
 
             y = 0
@@ -50,18 +50,16 @@ def create_soundvector(F, chosenvoice):
     return soundvector1
 
 
-F = np.loadtxt(f'{os.getcwd()}/../data/generated_voices.txt', usecols=range(4))
-#F = np.loadtxt(f'{os.getcwd()}/../data/generated_voice.txt', usecols=range(1))
+# F = np.loadtxt(f'{os.getcwd()}/../data/voice.txt', usecols=range(4))
+F = np.loadtxt(f'{os.getcwd()}/../data/generated_voice.txt', usecols=range(1))
 
 soundvector1 = create_soundvector(F, 0)
-soundvector2 = create_soundvector(F, 1)
-soundvector3 = create_soundvector(F, 2)
-soundvector4 = create_soundvector(F, 3)
+# soundvector2 = create_soundvector(F, 1)
+# soundvector3 = create_soundvector(F, 2)
+# soundvector4 = create_soundvector(F, 3)
 
-sd.play((soundvector1 + soundvector2 + soundvector3 + soundvector4)/4, 10000)
+# sd.play((soundvector1 + soundvector2 + soundvector3 + soundvector4) / 4, 10000)
+sd.play((soundvector1) / 4, 10000)
+
 time.sleep(50)
 sd.stop()
-
-
-
-
