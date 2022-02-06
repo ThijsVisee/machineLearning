@@ -79,15 +79,20 @@ def plot_all_voices(data, centered = True):
 
     plt.close()
 
-def plot_error_rate(measure, unit, title, data):
+'''
+create a plot for the error rates
+'''
+def plot_error_rate(measure, unit, title, data, interval=None):
 
+    if(not isinstance(interval, (list, np.ndarray))):
+        interval = range(len(data))
     check_dir_exists(PLOTDIR)
 
     plt.figure()
 
     fname = f'{PLOTDIR}/{title}.png'
 
-    plt.plot(data)
+    plt.plot(interval, data)
 
     plt.xlabel(unit)
     plt.ylabel(measure)
@@ -96,12 +101,14 @@ def plot_error_rate(measure, unit, title, data):
 
     plt.close()
 
-
-def boxplot(data, centered = True):
+'''
+create a boxplot of the main data characteristics
+'''
+def boxplot(data, title, centered = True):
 
     plots = []
 
-    fname = f'{PLOTDIR}/boxplot.png'
+    fname = f'{PLOTDIR}/boxplot_{title}.png'
 
     for d in data:
         arr = d
@@ -116,7 +123,7 @@ def boxplot(data, centered = True):
                     if val == 0:
                         val[...] = mean
 
-            fname = f'{PLOTDIR}/boxplot_centered.png'
+            fname = f'{PLOTDIR}/boxplot_{title}_centered.png'
 
         plots.append(arr)
 

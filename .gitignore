@@ -2,6 +2,7 @@
 venv
 out/*
 !out/.gitkeep
+!out/*.wav
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,virtualenv,visualstudiocode,pycharm
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,virtualenv,visualstudiocode,pycharm

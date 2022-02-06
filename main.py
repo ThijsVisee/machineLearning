@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import os
-from analysis.visualization import plot_error_rate, plot_single_voice
+from analysis.visualization import boxplot, plot_error_rate, plot_single_voice, plot_all_voices
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
@@ -256,7 +256,7 @@ def determine_ridge_alpha(d,preceding, predLength):
         all_euclidean.append(eucDistance)
 
     print(f"Best ridge alpha: {alpha_values[np.argmin(all_errors)]}")
-    plot_error_rate("Means Squared Logarithmic Error", "Ridge Alpha", "alpha", all_errors)
+    plot_error_rate("Means Squared Logarithmic Error", "Ridge Alpha", "alpha", all_errors, alpha_values)
     #print(f"Best Euclidean Distance: {np.argmin(all_euclidean)+1}")
 
 
@@ -284,11 +284,14 @@ if __name__ == '__main__':
     eucDistance = 0
     msle_error = 0
 
+    #boxplot(d.raw_data, "original")
+
     for vDx, v in enumerate(d.encoded_data):
 
         print(f'Predicting Voice {vDx+1}')
 
-        #get_voice_statistics(d.raw_data[vDx])
+        #print("prior distribution:")
+        #get_voice_statistics(d.raw_data[vDx], False)
 
         prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION, RIDGE_ALPHA)
 
@@ -296,7 +299,8 @@ if __name__ == '__main__':
 
         prediction = np.array(prediction)
 
-        #get_voice_statistics(prediction)
+        #print("predicted distribution:")
+        #get_voice_statistics(prediction[-predCount:], False)
 
         if(write_all_data):
             write_to_file(prediction, vDx)
@@ -319,6 +323,9 @@ if __name__ == '__main__':
 
     print(f"MSLE: {msle_error}")
     print(f"Euclidean Distance: {eucDistance}")
+
+    #boxplot(allVoices,"prediction")
+    #plot_all_voices(allVoices, True)
 
     print("creating audio file")
 

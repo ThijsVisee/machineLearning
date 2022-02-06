@@ -8,8 +8,6 @@ import soundfile as sf
 '''
 create a sound vector for a single voice
 '''
-
-
 # this code is adapted from the matlab file provided for the project
 def get_sound_vector(voice, sampleRate=10000):
     symbolicLength = len(voice)
@@ -54,8 +52,6 @@ def get_sound_vector(voice, sampleRate=10000):
 '''
 play a single voice
 '''
-
-
 def play_voice(voice, sampleRate=10000, stopEarly=0):
     sound = get_sound_vector(voice, sampleRate)
 
@@ -72,8 +68,6 @@ def play_voice(voice, sampleRate=10000, stopEarly=0):
 '''
 play all voices
 '''
-
-
 def play_all_voices(data, sampleRate=10000, stopEarly=0):
     durationPerSymbol = 1 / 16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
@@ -97,14 +91,12 @@ def play_all_voices(data, sampleRate=10000, stopEarly=0):
 '''
 create an audio file from a single voice
 '''
-
-
-def create_audio_file_single_voice(voice, sampleRate=10000):
+def create_audio_file_single_voice(voice, title, sampleRate=10000):
     sound = get_sound_vector(voice, sampleRate)
 
     sound = np.array(sound)
 
-    fName = f'{os.getcwd()}/out/voice{str(voice + 1)}.wav'
+    fName = f'{os.getcwd()}/out/voice{str(title + 1)}.wav'
 
     sf.write(fName, sound, sampleRate)
 
@@ -112,8 +104,6 @@ def create_audio_file_single_voice(voice, sampleRate=10000):
 '''
 create an audio file with all voices
 '''
-
-
 def create_audio_file(data, sampleRate=10000):
     durationPerSymbol = 1 / 16
     ticksPerSymbol = math.floor(sampleRate * durationPerSymbol)
@@ -137,9 +127,9 @@ if __name__ == '__main__':
     # chosenVoice = 0
     # voice = F[:, chosenVoice]
 
-    # voice = np.loadtxt(f'{os.getcwd()}/../out/voice1.txt')
+    voice = np.loadtxt(f'{os.getcwd()}/../out/voice4.txt')
 
-    voices = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
+    #voices = np.loadtxt(f'{os.getcwd()}/../data/data.txt', usecols=range(4))
 
     # voices = []
 
@@ -148,8 +138,9 @@ if __name__ == '__main__':
     # voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice3.txt'))
     # voices.append(np.loadtxt(f'{os.getcwd()}/../out/voice4.txt'))
 
-    voices = np.transpose(np.array(voices))
+    voices = np.transpose(np.array(voice))
 
-    play_all_voices(voices)
+    #play_all_voices(voices)
 
-    #create_audio_file(np.transpose(voices))
+    create_audio_file_single_voice(voices,3)
+    #create_audio_file(voices)
