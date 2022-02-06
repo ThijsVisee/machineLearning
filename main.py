@@ -1,12 +1,12 @@
 import numpy as np
 import tensorflow as tf
 import os
-from analysis.visualization import plot_single_voice
+from analysis.visualization import plot_error_rate, plot_single_voice
 
 from data.data_loader import VoiceData
 from model.linear_regression import LinearRegression
 from model.neural_net import test_performance, predict, write_voice_to_file, nn_model
-from analysis.validation import *
+from analysis.validation import msle, get_prob_vec
 from analysis.analysis import get_voice_statistics
 from analysis.visualization import plot_single_voice
 from play_voices.play_voices import create_audio_file, play_all_voices
@@ -83,6 +83,9 @@ def ridge_regression(d, voice, preceding_notes, pred, ridge_alpha = 0.005):
     duration_data = d.get_duration_data(voice)
     min_note, max_note = d.get_min_max_voice_value(voice)
 
+    if preceding_notes >= len(duration_data)-2:
+        raise RuntimeError("Excluded steps are higher than length of notes")
+
     pitches_original = [0] * (max_note - min_note + 2)
     for note in raw_data:
         pitches_original[note - min_note] += 1
@@ -90,10 +93,12 @@ def ridge_regression(d, voice, preceding_notes, pred, ridge_alpha = 0.005):
     X = []
     y_note = []
     y_duration = []
+    idxAdded = 0
     for idx, data in enumerate(duration_data):
         if idx <= preceding_notes:
             continue
 
+        idxAdded += 1
         y_note.append([0] * (max_note - min_note + 2))
         y_duration.append([0] * 16)
         y_duration[-1][min(data[5], 16) - 1] += 1
@@ -165,18 +170,30 @@ def ridge_regression(d, voice, preceding_notes, pred, ridge_alpha = 0.005):
 
 
 def determine_preceding_steps(d, predLength):
-    preceding_steps = np.arange(1,51,1)
+
+    print('Determine optimal number of preceding steps')
+
+    preceding_steps = np.arange(1,501,1)
 
     all_errors = []
     all_euclidean = []
-    for step in preceding_steps:
+
+    steps_not_too_high = True
+    step = 0
+    while steps_not_too_high:
 
         eucDistance = 0
         msle_error = 0
 
         for vDx, v in enumerate(d.encoded_data):
 
-            prediction, predCount = ridge_regression(d, vDx, step * 16, predLength)
+            try:
+                prediction, predCount = ridge_regression(d, vDx, preceding_steps[step], predLength)
+            except:
+                steps_not_too_high = False
+                eucDistance = 1
+                msle_error = 1
+                break
 
             prediction = np.array(prediction)
 
@@ -187,33 +204,80 @@ def determine_preceding_steps(d, predLength):
             eucDistance = distance.euclidean(orig_prob_vec, pred_prob_vec) if eucDistance == 0 else (eucDistance + distance.euclidean(orig_prob_vec, pred_prob_vec))/2
             msle_error = msle(pred_prob_vec,orig_prob_vec) if msle_error == 0 else (eucDistance + msle(pred_prob_vec,orig_prob_vec))/2
 
-        print(f"MSLE: {msle_error}")
-        print(f"Euclidean Distance: {eucDistance}")
-        print('')
+        #print(f"MSLE: {msle_error}")
+        #print(f"Euclidean Distance: {eucDistance}")
+        #print('')
         all_errors.append(msle_error)
         all_euclidean.append(eucDistance)
 
-    print(f"Best MSLE: {np.argmin(all_errors)+1}")
-    print(f"Best Euclidean Distance: {np.argmin(all_euclidean)+1}")
+        step +=1
 
+        if(step == len(preceding_steps)):
+            steps_not_too_high = False
+            break
 
+    print(f"Best preceding steps: {np.argmin(all_errors)+1}")
+    plot_error_rate("Means Squared Logarithmic Error", "Number of Preceding Steps", "msle", all_errors)
+    #print(f"Best Euclidean Distance: {np.argmin(all_euclidean)+1}")
+
+    # we want to flip the array to return larger values preferably if the same error rates are achieved for larger and smaller values
     return np.argmin(all_errors)+1
+
+def determine_ridge_alpha(d,preceding, predLength):
+
+    print('Determine optimal value for ridge alpha')
+
+    alpha_values = np.arange(0.001, 0.901, 0.001)
+
+    all_errors = []
+    all_euclidean = []
+    for alpha in alpha_values:
+
+        eucDistance = 0
+        msle_error = 0
+
+        for vDx, v in enumerate(d.encoded_data):
+
+            prediction, predCount = ridge_regression(d, vDx, preceding, predLength, alpha)
+
+            prediction = np.array(prediction)
+
+            orig_prob_vec = get_prob_vec(prediction[:-predCount])
+            pred_prob_vec = get_prob_vec(prediction[-predCount:])
+
+            # we can reasonably assume that the error will only be 0 after the initialization
+            eucDistance = distance.euclidean(orig_prob_vec, pred_prob_vec) if eucDistance == 0 else (eucDistance + distance.euclidean(orig_prob_vec, pred_prob_vec))/2
+            msle_error = msle(pred_prob_vec,orig_prob_vec) if msle_error == 0 else (eucDistance + msle(pred_prob_vec,orig_prob_vec))/2
+
+        #print(f"MSLE: {msle_error}")
+        #print(f"Euclidean Distance: {eucDistance}")
+        #print('')
+        all_errors.append(msle_error)
+        all_euclidean.append(eucDistance)
+
+    print(f"Best ridge alpha: {alpha_values[np.argmin(all_errors)]}")
+    plot_error_rate("Means Squared Logarithmic Error", "Ridge Alpha", "alpha", all_errors)
+    #print(f"Best Euclidean Distance: {np.argmin(all_euclidean)+1}")
+
+
+    return alpha_values[np.argmin(all_errors)]
 
 
 if __name__ == '__main__':
-
-    VOICE = 1
-
-    PREDICTION = 96 * 16
 
     write_all_data = True
     play_audio = False
 
     d = VoiceData('data.txt', True)
 
-     # values below are multiplied by 16 to get the actual number of notes from bars
-    INCLUDED_PRECEDING_STEPS = determine_preceding_steps(d, PREDICTION) * 16
-    #INCLUDED_PRECEDING_STEPS = 12 * 16
+    # values below are multiplied by 16 to get the actual number of notes from bars
+    PREDICTION = 96 * 16
+
+    #INCLUDED_PRECEDING_STEPS = determine_preceding_steps(d, PREDICTION)
+    INCLUDED_PRECEDING_STEPS = 88
+
+    #RIDGE_ALPHA = determine_ridge_alpha(d,INCLUDED_PRECEDING_STEPS, PREDICTION)
+    RIDGE_ALPHA = 0.203
 
     allPred = []
     allVoices = []
@@ -226,7 +290,7 @@ if __name__ == '__main__':
 
         #get_voice_statistics(d.raw_data[vDx])
 
-        prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION)
+        prediction, predCount = ridge_regression(d, vDx, INCLUDED_PRECEDING_STEPS, PREDICTION, RIDGE_ALPHA)
 
         #neural_network()
 
@@ -256,9 +320,9 @@ if __name__ == '__main__':
     print(f"MSLE: {msle_error}")
     print(f"Euclidean Distance: {eucDistance}")
 
-    create_audio_file(np.array(allVoices, dtype='float64'))
-
     print("creating audio file")
+
+    create_audio_file(np.array(allVoices))
 
     if(play_audio):
         play_all_voices(np.array(allVoices))

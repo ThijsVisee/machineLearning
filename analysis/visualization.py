@@ -79,6 +79,23 @@ def plot_all_voices(data, centered = True):
 
     plt.close()
 
+def plot_error_rate(measure, unit, title, data):
+
+    check_dir_exists(PLOTDIR)
+
+    plt.figure()
+
+    fname = f'{PLOTDIR}/{title}.png'
+
+    plt.plot(data)
+
+    plt.xlabel(unit)
+    plt.ylabel(measure)
+
+    plt.savefig(fname, format='png', dpi=600, transparent=True)
+
+    plt.close()
+
 
 def boxplot(data, centered = True):
 
